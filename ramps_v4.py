@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 import csv
 import re
+import sys
 
 # INTERCOM_PROD_KEY = ''
 
@@ -59,17 +60,17 @@ def get_conversation_csat_remark(conversation):
 
 
 def search_conversations(start_date_str, end_date_str):
-    
+
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d").timestamp()
     end_date = datetime.strptime(end_date_str, "%Y-%m-%d").timestamp()
-    
+
     url = "https://api.intercom.io/conversations/search"
     headers = {
         "Authorization": f"Bearer {INTERCOM_PROD_KEY}",
         "Accept": "application/json",
         "Content-Type": "application/json"
     }
-    
+
     payload = {
         "query": {
             "operator": "AND",
@@ -101,7 +102,7 @@ def search_conversations(start_date_str, end_date_str):
         if response.status_code == 200:
             data = response.json()
             all_conversations.extend(data.get('conversations', []))  
-            
+
             pagination = data.get('pages', {})
             next_page_data = pagination.get('next', None)
 
@@ -110,13 +111,13 @@ def search_conversations(start_date_str, end_date_str):
                 payload['pagination']['starting_after'] = next_page
             else:
                 break
-            
+
         else:
             print(f"Error: {response.status_code} - {response.text}")
             return None
 
     return all_conversations
-    
+
 
 def filter_conversations_by_product(conversations, product):
     filtered_conversations_buy = []
@@ -151,7 +152,7 @@ def store_conversations_to_csv(conversations, file_path):
 
             #if date_closed:
             #    date_closed = datetime.utcfromtimestamp(date_closed).strftime('%Y-%m-%d %H:%M:%S')
-            
+
             #if network == "I don't know":
             #    network = 'Unknown'
 
@@ -168,19 +169,26 @@ def store_conversations_to_csv(conversations, file_path):
             # })
 
 
-def main_function():
-    conversations = search_conversations("2024-11-11", "2024-11-18")
+def main_function(start_date, end_date):
+    conversations = search_conversations(start_date, end_date)
     if conversations:
         filtered_conversations_buy, filtered_conversations_sell = filter_conversations_by_product(conversations, 'Ramps')
         print(len(filtered_conversations_buy))
         print(len(filtered_conversations_sell))
-        store_conversations_to_csv(filtered_conversations_buy, 'onRamp_11_17_Nov.csv')
-        store_conversations_to_csv(filtered_conversations_sell, 'offRamp_11_17_Nov.csv')
+        store_conversations_to_csv(filtered_conversations_buy, f'onRamp_{start_date}_to_{end_date}.csv')
+        store_conversations_to_csv(filtered_conversations_sell, f'offRamp_{start_date}_to_{end_date}.csv')
     else:
         print('No conversations found for provided timeframe')
 
 
-main_function()
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python script.py <start_date> <end_date>")
+        sys.exit(1)        
+
+start_date = sys.argv[1]
+end_date = sys.argv[2]
+main_function(start_date, end_date)
 
 #ticket = get_intercom_conversation(505032)
 #print(ticket['statistics']['last_close_at'])
