@@ -4,12 +4,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Date Range Form</title>
+  <title>Run Python Scripts</title>
 </head>
 
 <body>
-  <h1>Search Conversations</h1>
+  <h1>Run Python Scripts</h1>
   <form action="/run" method="POST">
+    <label for="script_name">Select Script:</label>
+    <select id="script_name" name="script_name" required>
+      <option value="ramps_v3.py">Ramps</option>
+      <option value="staking.py">Staking</option>
+      <option value="script3.py">Script 3</option>
+      <option value="script4.py">Script 4</option>
+      <option value="script5.py">Script 5</option>
+      <option value="script6.py">Script 6</option>
+      <option value="script7.py">Script 7</option>
+      <option value="script8.py">Script 8</option>
+    </select>
+    <br><br>
     <label for="start_date">Start Date:</label>
     <input type="date" id="start_date" name="start_date" required>
     <br><br>
