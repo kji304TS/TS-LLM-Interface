@@ -117,15 +117,15 @@ def search_conversations(start_date_str, end_date_str):
     return all_conversations
 
 
-def filter_conversations_by_security(conversations):
-    """Filters conversations for the MetaMask Security area and retrieves full conversation details"""
+def filter_conversations_by_wallet_api(conversations):
+    """Filters conversations for the MetaMask Wallet API area and retrieves full conversation details"""
     filtered_conversations = []
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
         print(f"Custom Attributes: {attributes}")
 
-        # Check if the conversation belongs to "Security"
-        if attributes.get('MetaMask area', '').strip().lower() == 'security':
+        # Check if the conversation belongs to "Wallet API"
+        if attributes.get('MetaMask area', '').strip().lower() == 'wallet api':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
                 filtered_conversations.append(full_conversation)
@@ -134,9 +134,12 @@ def filter_conversations_by_security(conversations):
 
 
 def store_conversations_to_xlsx(conversations, file_path):
+    """Stores filtered Wallet API conversations into an XLSX file"""
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Conversations"
+    
+    # Define headers without 'Wallet API Issue' since it is not a category
     headers = ['conversation_id', 'summary', 'transcript']
     sheet.append(headers)
     
@@ -144,9 +147,12 @@ def store_conversations_to_xlsx(conversations, file_path):
         conversation_id = conversation['id']
         summary = sanitize_text(get_conversation_summary(conversation))
         transcript = sanitize_text(get_conversation_transcript(conversation))
-        sheet.append([conversation_id, summary, transcript])
+        
+        row = [conversation_id, summary, transcript]
+        sheet.append(row)
     
-    for col in ["B", "C"]:
+    # Apply text wrapping to relevant columns
+    for col in ["B", "C"]:  # Column B = Summary, Column C = Transcript
         for cell in sheet[col]:
             cell.alignment = Alignment(wrap_text=True)
     
@@ -176,16 +182,15 @@ def main_function(start_date, end_date):
     if not conversations:
         print("No conversations found for the provided timeframe.")
         return
-    security_conversations = filter_conversations_by_security(conversations)
-    print(f"Security Conversations Found: {len(security_conversations)}")
-    if security_conversations:
-        file_path = f'security_conversations_{start_date}_to_{end_date}.xlsx'
-        store_conversations_to_xlsx(security_conversations, file_path)
+    wallet_api_conversations = filter_conversations_by_wallet_api(conversations)
+    print(f"Wallet API Conversations Found: {len(wallet_api_conversations)}")
+    if wallet_api_conversations:
+        file_path = f'wallet_api_conversations_{start_date}_to_{end_date}.xlsx'
+        store_conversations_to_xlsx(wallet_api_conversations, file_path)
         upload_to_drive(file_path)
         print(f"File {file_path} uploaded successfully.")
     else:
-        print("No security-related conversations found.")
-
+        print("No wallet API-related conversations found.")
 
 
 if __name__ == "__main__":

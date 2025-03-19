@@ -1,0 +1,51 @@
+🚀 **Analysis for Wallet API**
+
+==================================================
+
+🔹 **Why Are These Issues Happening?**
+Based on user summaries, common themes linked to these issues include:
+
+- "Question
+The customer contacted us to request an ETH deposit address.Summary• Customer needs ETH deposit address
+• Ticket has been raised and email address provided for updates
+• Teammate asks for more information on why deposit address is needed
+• Teammate provides support and reminds customer not to share seed phrase
+• Conversation ends with teammate checking in and offering further assistance if needed"
+- "Question
+The customer contacted us because they are having trouble accessing their wallet.Summary• Customer is having trouble accessing their wallet.
+• Teammate has raised a ticket for the issue.
+• Teammate has asked for the customer's email address for ticket updates.
+• Teammate has provided their name and role for future communication.
+• Teammate has reminded the customer to never share their seed phrase with anyone."
+- "Question
+The customer contacted us for assistance with accessing the Sepolia ETH faucet.Summary• Sepolia ETH faucet is currently restricted due to spam and bot abuse.
+• Users need mainnet ETH and on-chain activity to access the faucet.
+• Alternative Sepolia faucets are available.
+• Customer should never share their seed phrase with anyone.
+• Teammate provided a link to alternative faucets and wished the customer luck with their development."
+- "Question
+The customer contacted us for assistance with recovering their 12-word Secret Recovery Phrase for their MetaMask wallet.Summary• MetaMask is a non-custodial wallet and does not have access to the 12-word Secret Recovery Phrase.
+• The customer can try to recover the phrase using the Vault Decryptor on a Chrome-based desktop browser.
+• If the decryptor does not work, the customer can back up their device image and check for updated steps.
+• Resources for backing up devices are provided.
+• The conversation has ended and the customer can send a message for further assistance."
+- "Question
+The customer contacted us for help setting up a Wallet API Key.Summary• Customer needs help setting up a Wallet API Key
+• Teammate directs customer to Infura's getting started page for API key creation and execution
+• Teammate reminds customer to never share their seed phrase with anyone
+• Customer confirms they want to use the API Key to synchronize funds to their Eth address
+• Teammate wraps up conversation, encourages customer to reach out if they need further assistance."
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords in the summaries?**
+•
+customer
+summary
+available
+no
+teammate
+their
+us
+question
+eth

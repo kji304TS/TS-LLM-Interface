@@ -117,21 +117,15 @@ def search_conversations(start_date_str, end_date_str):
     return all_conversations
 
 
-def filter_conversations_by_security(conversations):
-    """Filters conversations for the MetaMask Security area and retrieves full conversation details"""
+def filter_conversations_by_sdk(conversations):
     filtered_conversations = []
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
-        print(f"Custom Attributes: {attributes}")
-
-        # Check if the conversation belongs to "Security"
-        if attributes.get('MetaMask area', '').strip().lower() == 'security':
+        if attributes.get('MetaMask area', '').strip().lower() == 'sdk':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
                 filtered_conversations.append(full_conversation)
-
     return filtered_conversations
-
 
 def store_conversations_to_xlsx(conversations, file_path):
     workbook = Workbook()
@@ -170,23 +164,20 @@ def upload_to_drive(file_path):
     file.Upload()
     print(f"File {file_path} uploaded successfully to Google Drive.")
 
-
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
     if not conversations:
         print("No conversations found for the provided timeframe.")
         return
-    security_conversations = filter_conversations_by_security(conversations)
-    print(f"Security Conversations Found: {len(security_conversations)}")
-    if security_conversations:
-        file_path = f'security_conversations_{start_date}_to_{end_date}.xlsx'
-        store_conversations_to_xlsx(security_conversations, file_path)
+    sdk_conversations = filter_conversations_by_sdk(conversations)
+    print(f"SDK Conversations Found: {len(sdk_conversations)}")
+    if sdk_conversations:
+        file_path = f'sdk_conversations_{start_date}_to_{end_date}.xlsx'
+        store_conversations_to_xlsx(sdk_conversations, file_path)
         upload_to_drive(file_path)
         print(f"File {file_path} uploaded successfully.")
     else:
-        print("No security-related conversations found.")
-
-
+        print("No SDK-related conversations found.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

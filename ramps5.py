@@ -117,36 +117,47 @@ def search_conversations(start_date_str, end_date_str):
     return all_conversations
 
 
-def filter_conversations_by_security(conversations):
-    """Filters conversations for the MetaMask Security area and retrieves full conversation details"""
+def filter_conversations_by_ramps(conversations):
+    """Filters conversations for Ramps area and retrieves full conversation details"""
     filtered_conversations = []
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
         print(f"Custom Attributes: {attributes}")
 
-        # Check if the conversation belongs to "Security"
-        if attributes.get('MetaMask area', '').strip().lower() == 'security':
+        # Check if the conversation belongs to "Ramps"
+        if attributes.get('MetaMask area', '').strip().lower() == 'ramps':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
+                full_conversation['Buy or Sell'] = attributes.get('Buy or Sell', 'None')
+                full_conversation['Buy issue'] = attributes.get('Buy issue', 'None')
+                full_conversation['Sell issue'] = attributes.get('Sell issue', 'None')
                 filtered_conversations.append(full_conversation)
 
     return filtered_conversations
 
 
 def store_conversations_to_xlsx(conversations, file_path):
+    """Stores filtered Ramps conversations into an XLSX file"""
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Conversations"
-    headers = ['conversation_id', 'summary', 'transcript']
+    
+    headers = ['conversation_id', 'summary', 'transcript', 'Buy or Sell', 'Buy issue', 'Sell issue']
     sheet.append(headers)
     
     for conversation in conversations:
         conversation_id = conversation['id']
         summary = sanitize_text(get_conversation_summary(conversation))
         transcript = sanitize_text(get_conversation_transcript(conversation))
-        sheet.append([conversation_id, summary, transcript])
+        buy_or_sell = conversation.get('Buy or Sell', 'None')
+        buy_issue = conversation.get('Buy issue', 'None')
+        sell_issue = conversation.get('Sell issue', 'None')
+        
+        print(f"Writing conversation: {conversation_id}, Summary: {summary}, Transcript: {transcript}")
+        sheet.append([conversation_id, summary, transcript, buy_or_sell, buy_issue, sell_issue])
     
-    for col in ["B", "C"]:
+    # Apply text wrapping to the Summary & Transcript columns
+    for col in ["B", "C"]:  # Column B = Summary, Column C = Transcript
         for cell in sheet[col]:
             cell.alignment = Alignment(wrap_text=True)
     
@@ -172,20 +183,23 @@ def upload_to_drive(file_path):
 
 
 def main_function(start_date, end_date):
+    """Main function to process and store ramps-related conversations"""
     conversations = search_conversations(start_date, end_date)
+    
     if not conversations:
         print("No conversations found for the provided timeframe.")
         return
-    security_conversations = filter_conversations_by_security(conversations)
-    print(f"Security Conversations Found: {len(security_conversations)}")
-    if security_conversations:
-        file_path = f'security_conversations_{start_date}_to_{end_date}.xlsx'
-        store_conversations_to_xlsx(security_conversations, file_path)
+    
+    ramps_conversations = filter_conversations_by_ramps(conversations)
+    print(f"Ramps Conversations Found: {len(ramps_conversations)}")
+    
+    if ramps_conversations:
+        file_path = f'ramps_conversations_{start_date}_to_{end_date}.xlsx'
+        store_conversations_to_xlsx(ramps_conversations, file_path)
         upload_to_drive(file_path)
         print(f"File {file_path} uploaded successfully.")
     else:
-        print("No security-related conversations found.")
-
+        print("No ramps-related conversations found.")
 
 
 if __name__ == "__main__":

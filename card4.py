@@ -117,41 +117,75 @@ def search_conversations(start_date_str, end_date_str):
     return all_conversations
 
 
-def filter_conversations_by_security(conversations):
-    """Filters conversations for the MetaMask Security area and retrieves full conversation details"""
+def filter_conversations_by_card(conversations):
+    """Filters conversations for the MetaMask Card area and retrieves full conversation details"""
     filtered_conversations = []
+    
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
-        print(f"Custom Attributes: {attributes}")
-
-        # Check if the conversation belongs to "Security"
-        if attributes.get('MetaMask area', '').strip().lower() == 'security':
+        print(f"Custom Attributes: {attributes}")  # Debugging
+        
+        # Check if the conversation belongs to "Card"
+        if attributes.get('MetaMask area', '').strip().lower() == 'card':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
+                # ✅ Extract new subcategories
+                full_conversation['MM Card Issue'] = attributes.get('MM Card Issue', 'None')
+                full_conversation['MM Card Partner issue'] = attributes.get('MM Card Partner issue', 'None')
+                full_conversation['Dashboard Issue'] = attributes.get('Dashboard Issue', 'None')
+                full_conversation['KYC Issue'] = attributes.get('KYC Issue', 'None')
+
+                # ✅ Capture new subcategories (if they exist)
+                full_conversation['Dashboard Subcategory'] = attributes.get('Dashboard Issue - Subcategory', 'None')
+                full_conversation['KYC Subcategory'] = attributes.get('KYC Issue - Subcategory', 'None')
+
                 filtered_conversations.append(full_conversation)
 
     return filtered_conversations
 
 
-def store_conversations_to_xlsx(conversations, file_path):
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = "Conversations"
-    headers = ['conversation_id', 'summary', 'transcript']
-    sheet.append(headers)
-    
-    for conversation in conversations:
-        conversation_id = conversation['id']
-        summary = sanitize_text(get_conversation_summary(conversation))
-        transcript = sanitize_text(get_conversation_transcript(conversation))
-        sheet.append([conversation_id, summary, transcript])
-    
-    for col in ["B", "C"]:
-        for cell in sheet[col]:
-            cell.alignment = Alignment(wrap_text=True)
-    
-    workbook.save(file_path)
-    print(f"File {file_path} saved successfully.")
+
+def store_conversations_to_csv(conversations, file_path):
+    """Stores filtered Card conversations into a CSV file"""
+
+    # ✅ Updated CSV headers to include new subcategories
+    headers = [
+        'conversation_id', 'summary', 'transcript', 
+        'MM Card Issue', 'MM Card Partner issue',
+        'Dashboard Issue', 'Dashboard Subcategory', 
+        'KYC Issue', 'KYC Subcategory'
+    ]
+
+    with open(file_path, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+
+        for conversation in conversations:
+            conversation_id = conversation['id']
+            summary = sanitize_text(get_conversation_summary(conversation))
+            transcript = sanitize_text(get_conversation_transcript(conversation))
+
+            # ✅ Extract new categories & subcategories
+            mm_card_issue = conversation.get('MM Card Issue', 'None')
+            mm_card_partner_issue = conversation.get('MM Card Partner issue', 'None')
+            dashboard_issue = conversation.get('Dashboard Issue', 'None')
+            dashboard_subcategory = conversation.get('Dashboard Subcategory', 'None')
+            kyc_issue = conversation.get('KYC Issue', 'None')
+            kyc_subcategory = conversation.get('KYC Subcategory', 'None')
+
+            print(f"Writing conversation: {conversation_id}, Summary: {summary}, Transcript: {transcript}")
+
+            writer.writerow({
+                'conversation_id': conversation_id,
+                'summary': summary,
+                'transcript': transcript,
+                'MM Card Issue': mm_card_issue,
+                'MM Card Partner issue': mm_card_partner_issue,
+                'Dashboard Issue': dashboard_issue,
+                'Dashboard Subcategory': dashboard_subcategory,
+                'KYC Issue': kyc_issue,
+                'KYC Subcategory': kyc_subcategory
+            })
 
 def upload_to_drive(file_path):
     gauth = GoogleAuth()
@@ -170,23 +204,16 @@ def upload_to_drive(file_path):
     file.Upload()
     print(f"File {file_path} uploaded successfully to Google Drive.")
 
-
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
-    if not conversations:
-        print("No conversations found for the provided timeframe.")
-        return
-    security_conversations = filter_conversations_by_security(conversations)
-    print(f"Security Conversations Found: {len(security_conversations)}")
-    if security_conversations:
-        file_path = f'security_conversations_{start_date}_to_{end_date}.xlsx'
-        store_conversations_to_xlsx(security_conversations, file_path)
+    if conversations:
+        card_conversations = filter_conversations_by_card(conversations)
+        print(f"Card Conversations: {len(card_conversations)}")
+        file_path = f'card_conversations_{start_date}_to_{end_date}.xlsx'
+        store_conversations_to_xlsx(card_conversations, file_path)
         upload_to_drive(file_path)
-        print(f"File {file_path} uploaded successfully.")
     else:
-        print("No security-related conversations found.")
-
-
+        print("No conversations found for provided timeframe")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

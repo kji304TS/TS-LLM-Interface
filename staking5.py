@@ -116,42 +116,97 @@ def search_conversations(start_date_str, end_date_str):
     print(f"Total conversations retrieved: {len(all_conversations)}")  # Final count
     return all_conversations
 
-
-def filter_conversations_by_security(conversations):
-    """Filters conversations for the MetaMask Security area and retrieves full conversation details"""
+def filter_conversations_by_staking(conversations):
+    """Filters conversations for the MetaMask Staking area and retrieves full conversation details"""
     filtered_conversations = []
+    
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
-        print(f"Custom Attributes: {attributes}")
-
-        # Check if the conversation belongs to "Security"
-        if attributes.get('MetaMask area', '').strip().lower() == 'security':
+        print(f"Custom Attributes: {attributes}")  # Debugging
+        
+        # Check if the conversation belongs to "Staking"
+        if attributes.get('MetaMask area', '').strip().lower() == 'staking':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
+                # ✅ Extract new subcategories
+                full_conversation['Staking Feature'] = attributes.get('Staking Feature', 'None')
+                full_conversation['Validator Staking Issue'] = attributes.get('Validator Staking Issue', 'None')
+                full_conversation['Pooled Staking Issue'] = attributes.get('Pooled Staking Issue', 'None')
+                full_conversation['Liquid Staking Issue'] = attributes.get('Liquid Staking Issue', 'None')
+                full_conversation['Third Party Staking'] = attributes.get('Third Party Staking', 'None')
+                full_conversation['Bug ID'] = attributes.get('Bug ID', 'None')
+                full_conversation['Refund amount (USD)'] = attributes.get('Refund amount (USD)', 'None')
+                full_conversation['Refund Provided'] = attributes.get('Refund Provided', 'None')
+
+                # ✅ Capture subcategories (if they exist)
+                full_conversation['Withdrawals'] = attributes.get('Withdrawals', 'None')
+                full_conversation['Managing Staked Tokens'] = attributes.get('Managing Staked Tokens', 'None')
+                full_conversation['User Training'] = attributes.get('User Training', 'None')
+                full_conversation['Failed Transaction'] = attributes.get('Failed Transaction', 'None')
+                full_conversation['Liquid Staking Provider'] = attributes.get('Liquid Staking Provider', 'None')
+                full_conversation['Staking Token Type'] = attributes.get('Staking Token Type', 'None')
+                full_conversation['Staking Platform'] = attributes.get('Staking Platform', 'None')
+                
                 filtered_conversations.append(full_conversation)
 
     return filtered_conversations
-
 
 def store_conversations_to_xlsx(conversations, file_path):
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Conversations"
-    headers = ['conversation_id', 'summary', 'transcript']
+
+    # ✅ Define the headers (including new subcategories for Staking)
+    headers = [
+        'conversation_id', 'summary', 'transcript', 
+        'Staking Feature', 'Validator Staking Issue', 'Pooled Staking Issue', 
+        'Liquid Staking Issue', 'Third Party Staking', 'Bug ID', 
+        'Refund amount (USD)', 'Refund Provided', 'Withdrawals', 
+        'Managing Staked Tokens', 'User Training', 'Failed Transaction',
+        'Liquid Staking Provider', 'Staking Token Type', 'Staking Platform'
+    ]
     sheet.append(headers)
-    
+
     for conversation in conversations:
         conversation_id = conversation['id']
-        summary = sanitize_text(get_conversation_summary(conversation))
-        transcript = sanitize_text(get_conversation_transcript(conversation))
-        sheet.append([conversation_id, summary, transcript])
-    
-    for col in ["B", "C"]:
+        summary = remove_html_tags(get_conversation_summary(conversation))
+        transcript = remove_html_tags(get_conversation_transcript(conversation))
+
+        # ✅ Extract new staking categories & subcategories
+        staking_feature = conversation.get('Staking Feature', 'None')
+        validator_staking_issue = conversation.get('Validator Staking Issue', 'None')
+        pooled_staking_issue = conversation.get('Pooled Staking Issue', 'None')
+        liquid_staking_issue = conversation.get('Liquid Staking Issue', 'None')
+        third_party_staking = conversation.get('Third Party Staking', 'None')
+        bug_id = conversation.get('Bug ID', 'None')
+        refund_amount = conversation.get('Refund amount (USD)', 'None')
+        refund_provided = conversation.get('Refund Provided', 'None')
+        withdrawals = conversation.get('Withdrawals', 'None')
+        managing_staked_tokens = conversation.get('Managing Staked Tokens', 'None')
+        user_training = conversation.get('User Training', 'None')
+        failed_transaction = conversation.get('Failed Transaction', 'None')
+        liquid_staking_provider = conversation.get('Liquid Staking Provider', 'None')
+        staking_token_type = conversation.get('Staking Token Type', 'None')
+        staking_platform = conversation.get('Staking Platform', 'None')
+
+        # ✅ Append the data as a row in the sheet
+        sheet.append([
+            conversation_id, summary, transcript, 
+            staking_feature, validator_staking_issue, pooled_staking_issue, 
+            liquid_staking_issue, third_party_staking, bug_id, 
+            refund_amount, refund_provided, withdrawals, 
+            managing_staked_tokens, user_training, failed_transaction,
+            liquid_staking_provider, staking_token_type, staking_platform
+        ])
+
+    # ✅ Apply text wrapping for better readability
+    for col in ["B", "C"]:  # Column B = Summary, Column C = Transcript
         for cell in sheet[col]:
             cell.alignment = Alignment(wrap_text=True)
-    
+
     workbook.save(file_path)
     print(f"File {file_path} saved successfully.")
+
 
 def upload_to_drive(file_path):
     gauth = GoogleAuth()
@@ -170,23 +225,16 @@ def upload_to_drive(file_path):
     file.Upload()
     print(f"File {file_path} uploaded successfully to Google Drive.")
 
-
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
-    if not conversations:
-        print("No conversations found for the provided timeframe.")
-        return
-    security_conversations = filter_conversations_by_security(conversations)
-    print(f"Security Conversations Found: {len(security_conversations)}")
-    if security_conversations:
-        file_path = f'security_conversations_{start_date}_to_{end_date}.xlsx'
-        store_conversations_to_xlsx(security_conversations, file_path)
+    if conversations:
+        staking_conversations = filter_conversations_by_staking(conversations)
+        print(f"Staking Conversations: {len(staking_conversations)}")
+        file_path = f'staking_conversations_{start_date}_to_{end_date}.xlsx'
+        store_conversations_to_xlsx(staking_conversations, file_path)
         upload_to_drive(file_path)
-        print(f"File {file_path} uploaded successfully.")
     else:
-        print("No security-related conversations found.")
-
-
+        print("No conversations found for provided timeframe")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -196,3 +244,4 @@ if __name__ == "__main__":
     end_date = sys.argv[2]
     print(f"Script started with start_date: {start_date} and end_date: {end_date}")
     main_function(start_date, end_date)
+
