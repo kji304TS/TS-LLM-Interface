@@ -1,0 +1,51 @@
+🚀 **Analysis for Security**
+
+==================================================
+
+🔹 **Why Are These Issues Happening?**
+Based on user summaries, common themes linked to these issues include:
+
+- "Question
+The customer contacted us because they sent funds from Crypto.com app to MetaMask wallet but they are not appearing.Summary• Customer sent funds from Crypto.com app to MetaMask wallet, but they are not appearing.
+• Troubleshooting steps were provided, including checking network, verifying transaction, manually adding token, and checking for errors.
+• Customer provided transaction ID and it was found that the tokens were transferred to a different address.
+• Customer may be involved in an investment scam and should cease contact with anyone related to the platform.
+• A ticket was created for further investigation by the Technical Support team."
+- "Question
+The customer contacted us about a stressful situation.Summary• Customer contacted MetaMask User Safety Team about a stressful situation.
+• Teammate requested more information about the situation and advised customer not to seek support elsewhere.
+• Customer was asked to provide details about their interaction with the platform and any suspicious activity.
+• Teammate requested customer's MetaMask state logs and advised them to not share their seed phrase with anyone.
+• Customer informed teammate that they will provide more information when they have time."
+- "Question
+The customer contacted us for assistance with unauthorized activity on their MetaMask account due to a compromised Secret Recovery Phrase or Private Key.Summary• User contacted MetaMask for assistance with unauthorized activity on their account.
+• User's Secret Recovery Phrase or Private Key has been compromised.
+• User should immediately stop using accounts derived from this Secret Recovery Phrase.
+• User participated in a presale and purchased tokens through Moonpay.
+• Estimated $2,500 USD value lost."
+- "Question
+The customer contacted us to request a ticket be created for an investigation into a suspicious address and transaction.Summary• User requested for a ticket to be created.
+• Teammate logged the ticket and informed the user about the usual reply time.
+• The team will contact the user via email for updates.
+• The user provided their email address for ticket updates.
+• The team will investigate the suspicious address and transaction details provided by the user."
+- "Question
+The customer contacted us to report a possible theft of $274,000 USDC from their MetaMask account.Summary• User reports apparent theft of $274,000 USDC from their MetaMask account.
+• User is transferred to an agent and provides details of the fraudulent transaction.
+• Agent advises user to not deposit more funds and provides a list of questions to gather more information.
+• User later informs that the missing funds were not lost and the account is not compromised.
+• Agent asks for confirmation and requests for a screenshot of the current balance."
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords in the summaries?**
+•
+customer
+their
+no
+available
+summary
+metamask
+user
+teammate
+wallet

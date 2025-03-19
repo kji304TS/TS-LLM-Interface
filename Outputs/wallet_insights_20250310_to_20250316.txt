@@ -1,0 +1,73 @@
+🚀 **Analysis for Wallet**
+
+==================================================
+
+🔹 **Most Frequent Issue:**
+User training (Count: 1052)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+User training                      1052      33.42%
+Transaction issue                  544       17.28%
+Back-up or restore                 458       14.55%
+Balance issue                      380       12.07%
+External dApp issue                228       7.24%
+Other                              196       6.23%
+Opening MetaMask                   117       3.72%
+NFT issue                          59        1.87%
+Confirmation issue                 41        1.30%
+Extension is slow (slow loading)   29        0.92%
+Hardware wallet issue              28        0.89%
+Notification issue                 9         0.29%
+Feature request                    7         0.22%
+
+🔹 **Why Are These Issues Happening?**
+Based on user summaries, common themes linked to these issues include:
+
+- "Question
+The customer contacted us because they were experiencing an error message when trying to open MetaMask.Summary• Customer is experiencing an error message when trying to open MetaMask.
+• Teammate suggests troubleshooting steps such as restarting the extension, updating MetaMask, and disabling other extensions.
+• Customer has already tried these steps but is still receiving the error message.
+• Teammate creates a ticket for specialized technical support team to investigate the issue.
+• Estimated reply time for technical support is one day."
+- "Question
+The customer contacted us because they were having trouble claiming tokens from B3 on MetaMask.Summary• Customer is having trouble claiming tokens from B3 on MetaMask.
+• Error message: "This transaction would have cost you extra fees, so we stopped it. Your money is still in your wallet."
+• Teammate creates a ticket for Technical Support team to investigate the issue.
+• Usual reply time for Technical Support team is under 1 business day.
+• Customer requests for ticket to be created."
+- "Question
+The customer contacted us for assistance in adding the Beratrax network to their MetaMask wallet after reinstalling the extension.Summary• Customer is having trouble adding Beratrax network to MetaMask wallet after reinstalling the extension.
+• Teammate asks for screenshot of main page and which blockchain network the customer has funds on.
+• Teammate guides customer to add Beratrax network manually by entering network details.
+• Customer mentions previous ability to add network by approving it, but it no longer works.
+• Teammate suggests using a specific web page to connect wallet to Beratrax network."
+- "Question
+The customer contacted us for assistance with importing an NFT to MetaMask.Summary• Customer unable to import NFT to MetaMask, even though it is visible on Etherscan
+• Teammate suggests manually importing NFT by entering contract address and token ID
+• Customer successfully imports NFT by switching to Custom Token tab and entering contract address
+• Teammate offers further assistance and directs customer to Knowledge Base for future inquiries
+• Conversation ends with customer thanking teammate and confirming issue is resolved."
+- "Question
+The customer's tokens disappeared after making transactions on PancakeSwap.Summary• User's MetaMask wallet is empty, had $13 previously
+• User used Secret Recovery Phrase to log in
+• Only had one account on BNB Smart Chain
+• No transactions made on BNB Smart Chain, one token on BASE Network
+• User made transactions on PancakeSwap, but tokens disappeared"
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords in the summaries?**
+•
+customer
+metamask
+teammate
+their
+no
+question
+available
+summary
+contacted

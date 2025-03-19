@@ -1,0 +1,71 @@
+🚀 **Analysis for Dashboard**
+
+==================================================
+
+🔹 **Most Frequent Issue:**
+Balance is inaccurate (Count: 37)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Balance is inaccurate              37        28.03%
+User Training                      26        19.70%
+Connecting to Portfolio            19        14.39%
+Tokens / NFTs not displaying properly14        10.61%
+Other                              12        9.09%
+DeFi view issue                    9         6.82%
+Token / NFT Import                 6         4.55%
+Issue accessing or adding new account3         2.27%
+Crypto Tax Calculator              3         2.27%
+Sending tokens                     2         1.52%
+Removing account                   1         0.76%
+
+🔹 **Why Are These Issues Happening?**
+Based on user summaries, common themes linked to these issues include:
+
+- "Question
+The customer contacted us because their transferred tokens were not showing up in their MetaMask balance.Summary• Customer transferred 3 VIDAI tokens to MetaMask, shows successful on BSC Scan but balance shows 0.
+• Agent requested transaction hash and network used.
+• Customer provided transaction hash and screenshot of token on main page.
+• Agent advised to delete BNB chain and lock account with password.
+• Customer requested guidance on deleting BNB network."
+- "Question
+The customer contacted us because they are experiencing an unspecified error when trying to connect their MetaMask wallet to use the bridge.Summary• Customer is experiencing an unspecified error when trying to connect their MetaMask wallet to use the bridge.
+• They have already updated the app and cleared their browsing history and cookies.
+• Teammate asks for a screenshot and suggests clearing privacy data, browser history, and cookies in the app's settings.
+• Teammate will wait for customer to try again and see if the issue is resolved.
+• If no response in 10 minutes, conversation will be closed due to inactivity."
+- "Question
+The customer contacted us for assistance with connecting their MetaMask wallet and transferring funds.Summary• Customer is having trouble connecting their MetaMask wallet and transferring funds.
+• Teammate suggests troubleshooting steps such as disabling conflicting extensions, updating MetaMask, and clearing cache and cookies.
+• Customer is transferred to an agent for further assistance.
+• Agent asks for a screenshot and suggests clearing privacy data, browser history, and cookies.
+• Agent checks back in and conversation is closed due to inactivity."
+- "Question
+The customer contacted us regarding an issue with a $75 transaction involving poly that was not received by the recipient.Summary• Customer is having an issue with a transaction involving $75 worth of poly.
+• The transaction shows as confirmed but the money is not received by the recipient.
+• The customer is unsure of which network the transaction was made on.
+• The customer is asked to provide a screenshot of the transaction.
+• The conversation is ended due to inactivity."
+- "Question
+The customer contacted us for assistance with sending USDT from their MetaMask wallet.Summary• Customer is having trouble sending USDT from their MetaMask wallet.
+• Customer is confused about the difference between the MetaMask extension and the Portfolio dashboard.
+• Teammate explains that the Portfolio is a decentralized application and not the wallet itself.
+• Teammate instructs customer to toggle the MetaMask extension off and on again in their browser's extension manager.
+• Customer successfully sends crypto after toggling the extension."
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords in the summaries?**
+•
+customer
+metamask
+their
+teammate
+question
+contacted
+us
+no
+available

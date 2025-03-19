@@ -1,4 +1,9 @@
-<<<<<<< HEAD
 ".env" 
-=======
->>>>>>> upstream/main
+"client_secrets.json" 
+"credentials.json" 
+"*.xlsx"   # This will ignore all Excel files
+"Outputs/" 
+"output_files/" 
+"client_secrets.json" 
+"credentials.json" 
+

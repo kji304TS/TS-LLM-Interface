@@ -9,6 +9,8 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import pytz
 from datetime import datetime, timedelta
+from openpyxl import Workbook
+from openpyxl.styles import Alignment
 
 # ✅ Load .env variables
 load_dotenv()  # <-- This must be called BEFORE using os.getenv()
@@ -20,11 +22,13 @@ INTERCOM_PROD_KEY = os.getenv("INTERCOM_PROD_KEY")
 
 CATEGORY_HEADERS = {
     "Bridges": ["Bridge Issue"],
+    "Card": ["MM Card Issue", "MM Card Partner issue", "Dashboard Issue", "KYC Issue", "Dashboard Issue - Subcategory", "KYC Issue - Subcategory"],
     "Dashboard": ["Dashboard issue"],
     "Ramps": ["Buy or Sell", "Buy issue", "Sell issue"],
     "SDK": [],
     "Security": [],
     "Snaps": ["Snaps Category"],
+    "Staking": ["Staking Feature", "Validator Staking Issue", "Pooled Staking Issue", "Liquid Staking Issue", "Third Party Staking", "Bug ID", "Refund amount (USD)", "Refund Provided", "Withdrawals", "Managing Staked Tokens", "User Training", "Failed Transaction", "Liquid Staking Provider", "Staking Token Type", "Staking Platform"],
     "Swaps": ["Swaps issue"],
     "Wallet": ["Wallet issue"],
     "Wallet API": []
@@ -50,6 +54,18 @@ PREDEFINED_PROMPTS = {
         "What is the most frequent subcategory in the 'Bridge Issue' column?",
         "What is the most frequent subcategory in the 'MM Card Issue' column?",
         "What is the most frequent subcategory in the 'MM Card Partner issue' column?",
+        "What is the most frequent subcategory in the 'Dashboard Issue' column?",
+        "What is the most frequent subcategory in the 'KYC Issue' column?",
+        "What is the most frequent subcategory in the 'Dashboard Issue - Subcategory' column?",
+        "What is the most frequent subcategory in the 'KYC Issue - Subcategory' column?",
+        "What is the most frequent subcategory in the 'Buy issue' column?",
+        "What is the most frequent subcategory in the 'Sell issue' column?",
+        "What is the most frequent subcategory in the 'Snaps Category' column?",
+        "What is the most frequent subcategory in the 'Staking Feature' column?",
+        "What is the most frequent subcategory in the 'Validator Staking Issue' column?",
+        "What is the most frequent subcategory in the 'Pooled Staking Issue' column?",
+        "What is the most frequent subcategory in the 'Liquid Staking Issue' column?",
+        "What is the most frequent subcategory in the 'Third Party Staking' column?",
         "What is the most frequent subcategory in the 'Swaps issue' column?",
         "What is the most frequent subcategory in the 'Wallet issue' column?"
     ],
@@ -69,6 +85,7 @@ PREDEFINED_PROMPTS = {
         "Which MetaMask area has seen the highest increase in conversations?"
     ]
 }
+
 
 def get_last_week_dates():
     """Returns the start (last Monday 00:00) and end (last Sunday 23:59) dates."""
@@ -237,16 +254,111 @@ def filter_conversations_by_product(conversations, product):
         if meta_mask_area.lower() == product.lower():
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
+                # ✅ Extract all relevant attributes dynamically
+                for category in CATEGORY_HEADERS.get(product, []):
+                    full_conversation[category] = attributes.get(category, 'None')
+                filtered_conversations.append(full_conversation)
+    
     print(f"Total Conversations for {product}: {len(filtered_conversations)}")
     return filtered_conversations
 
 # ✅ Store extracted data into a CSV file
+# ✅ Store extracted data into an XLSX file
+def store_conversations_to_xlsx(conversations, meta_mask_area, week_start_str, week_end_str):
+    """Stores conversations in a dynamically named Excel file."""
+    file_name = f"{meta_mask_area.lower()}_conversations_{week_start_str}_to_{week_end_str}.xlsx"
+    file_path = os.path.join(OUTPUT_DIR, file_name)
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Conversations"
+
+    headers = ["conversation_id", "summary", "transcript"] + CATEGORY_HEADERS.get(meta_mask_area, [])
+    sheet.append(headers)
+
+    for conversation in conversations:
+        conversation_id = conversation['id']
+        summary = sanitize_text(get_conversation_summary(conversation))
+        transcript = sanitize_text(get_conversation_transcript(conversation))
+        attributes = conversation.get('custom_attributes', {})
+
+        row = [
+            conversation_id, summary, transcript,
+            *[attributes.get(field, 'N/A') for field in CATEGORY_HEADERS.get(meta_mask_area, [])]
+        ]
+        sheet.append(row)
+
+    # Apply text wrapping for better readability
+    for col in ["B", "C"]:  # Column B = Summary, Column C = Transcript
+        for cell in sheet[col]:
+            cell.alignment = Alignment(wrap_text=True)
+
+    workbook.save(file_path)
+    print(f"✅ Saved: {file_name}")
+    return file_path
+
+
+# ✅ Analyze XLSX and generate insights
+def analyze_xlsx_and_generate_insights(xlsx_file, meta_mask_area, week_start_str, week_end_str):
+    """Analyzes the Excel file, generates structured insights, and ensures predefined prompts are answered."""
+    print(f"📊 Analyzing {xlsx_file} for {meta_mask_area}...")
+    
+    df = pd.read_excel(xlsx_file)
+    df.columns = df.columns.str.strip()
+    
+    print(f"Columns in {meta_mask_area} XLSX: {df.columns.tolist()}")
+    
+    issue_columns = [col for col in df.columns if col not in ['conversation_id', 'summary', 'transcript']]
+    insights_file = os.path.join(INSIGHTS_DIR, f"{meta_mask_area.lower()}_insights_{week_start_str}_to_{week_end_str}.txt")
+    
+    if not os.path.exists(INSIGHTS_DIR):
+        os.makedirs(INSIGHTS_DIR)
+    
+    analysis_text = [f"🚀 **Analysis for {meta_mask_area}**\n", "=" * 50]
+    
+    top_words = pd.Series(dtype="int")
+    keyword_contexts = []
+    
     if 'summary' in df.columns and not df['summary'].dropna().empty:
         word_series = df['summary'].str.lower().str.split(expand=True).stack()
         filtered_words = word_series[~word_series.isin(STOP_WORDS)]
         if not filtered_words.empty:
             top_words = filtered_words.value_counts().head(10)
-
+            for keyword in top_words.index:
+                context_matches = df['summary'].str.contains(keyword, case=False, na=False)
+                keyword_contexts += df.loc[context_matches, 'summary'].tolist()
+    
+    if top_words.empty:
+        top_words = pd.Series(["No keywords available"], dtype="string")
+    
+    if issue_columns:
+        issue_col = issue_columns[0]
+        print(f"📝 Processing issue column: {issue_col}")
+        
+        if not df[issue_col].dropna().empty:
+            most_frequent = df[issue_col].value_counts().idxmax()
+            count = df[issue_col].value_counts().max()
+            
+            total_issues = df[issue_col].value_counts().sum()
+            issue_percentages = (df[issue_col].value_counts(normalize=True) * 100).round(2)
+            
+            analysis_text.append(f"\n🔹 **Most Frequent Issue:**\n{most_frequent} (Count: {count})\n")
+            
+            analysis_text.append("\n🔹 **Full Breakdown of Issues:**\n")
+            analysis_text.append(f"{'Issue':<35}{'Count':<10}{'Percentage':<10}")
+            analysis_text.append("-" * 55)
+            
+            for issue, value in df[issue_col].value_counts().items():
+                percentage = issue_percentages.get(issue, 0.00)
+                analysis_text.append(f"{issue:<35}{value:<10}{percentage:.2f}%")
+            
+    # ✅ Deeper Explanation: Why These Issues Occur
+    if keyword_contexts:
+        analysis_text.append("\n🔹 **Why Are These Issues Happening?**")
+        analysis_text.append("Based on user summaries, common themes linked to these issues include:\n")
+        for context in keyword_contexts[:5]:
+            analysis_text.append(f"- \"{context}\"")
+    
     # ✅ Answer Predefined Prompts
     analysis_text.append("\n🔹 **Predefined Prompt Analysis:**")
     for category, prompts in PREDEFINED_PROMPTS.items():
@@ -255,6 +367,12 @@ def filter_conversations_by_product(conversations, product):
                 if "top 10 most important keywords" in prompt:
                     analysis_text.append(f"\n**{prompt}**")
                     analysis_text.append("\n".join(top_words.index.tolist()) if not top_words.empty else "No keywords available.")
+    
+    with open(insights_file, 'w', encoding='utf-8') as f:
+        f.write("\n".join(analysis_text))
+    
+    print(f"✅ Insights file created successfully: {insights_file}")
+    return insights_file
 
 
 def upload_to_google_drive(drive, file_path):
@@ -312,6 +430,9 @@ def authenticate_google_drive():
         return None  # Return None if authentication fails
 
 
+# ✅ Main function to execute extraction and saving
+def main_function(start_date, end_date, week_start_str, week_end_str):
+    """Extracts conversations, analyzes them, and uploads both conversation XLSX files and insights files to Google Drive."""
     print(f"🔍 Searching for conversations from {start_date} to {end_date}...")
 
     conversations = search_conversations(start_date, end_date)
@@ -319,12 +440,20 @@ def authenticate_google_drive():
         print("⚠️ No conversations found. The script will still continue processing.")
         return  
 
+    processed_files = set()  # Store unique conversation XLSX files
     insights_files = set()   # Store unique insights files
 
     for area in CATEGORY_HEADERS.keys():
         filtered_conversations = filter_conversations_by_product(conversations, area)
         if filtered_conversations:
-            print(f"✅ {area} Conversations Found: {len(filtered_conversations)}"
+            print(f"✅ {area} Conversations Found: {len(filtered_conversations)}")
+
+            # ✅ Generate and save the conversation XLSX file
+            xlsx_file = store_conversations_to_xlsx(filtered_conversations, area, week_start_str, week_end_str)
+            processed_files.add(xlsx_file)  # ✅ Use a set to ensure uniqueness
+
+            # ✅ Generate the Insights file
+            insights_file = analyze_xlsx_and_generate_insights(xlsx_file, area, week_start_str, week_end_str)
             if insights_file:
                 insights_files.add(insights_file)  # ✅ Use a set to ensure uniqueness
             else:
@@ -339,7 +468,10 @@ def authenticate_google_drive():
 
     # ✅ Debugging Step: Print Files Queued for Upload
     print("📤 Files Queued for Upload:")
+    print("XLSX Files:", list(processed_files))
+    print("Insights Files:", list(insights_files))
 
+    # ✅ Upload conversation XLSX files **only once**
     for file in processed_files:
         upload_to_google_drive(drive, file)
 
@@ -348,7 +480,6 @@ def authenticate_google_drive():
         upload_to_google_drive(drive, file)
 
     print("✅ All conversations and insights files uploaded successfully.")
-
 
 if __name__ == "__main__":
     # ✅ Automatically determine correct date range for last week

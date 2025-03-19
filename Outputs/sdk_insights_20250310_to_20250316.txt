@@ -1,0 +1,52 @@
+🚀 **Analysis for SDK**
+
+==================================================
+
+🔹 **Why Are These Issues Happening?**
+Based on user summaries, common themes linked to these issues include:
+
+- "Question
+The customer contacted us to inquire about adding a logo for a new blockchain on MetaMask.Summary• To add a logo for a new blockchain on MetaMask, a pull request must be submitted to both the Browser-Extension and Mobile App codebases with the following information: 
+    - Network information (URL) including chain ID, name, native currency, RPC endpoints, block explorer URL, and image URL 
+    - Image source (URL) for the logo in .png or .svg format 
+• The product team will review and accept the changes if valid, but there is no set timeline for this process. 
+• MetaMask uses Github to manage network information. 
+• The customer's ticket has been logged and will be responded to within 1 business day."
+- "Question
+The customer contacted us for support with reconnecting their Taker Protocol testnet node.Summary• Customer is having trouble reconnecting their Taker Protocol testnet node and is receiving an error message.
+• Teammate suggests reaching out to Taker Protocol team for support as the issue seems to be with the customer's code.
+• Teammate asks for more information about the client and error message.
+• Teammate logs a ticket for the customer's request and provides an estimated response time.
+• Teammate asks for the customer's email address for ticket updates."
+- "Question
+The customer contacted us for help connecting to their private blockchain server on Google Cloud.Summary• Customer needs help connecting to their private blockchain server on Google Cloud.
+• Teammate suggests using Infura service for RPC access to blockchains.
+• Customer wants to access their funds on the cloud but can't see the balance.
+• Teammate asks for public address and blockchain information.
+• Conversation ends with teammate offering further assistance if needed."
+- "Question
+The customer contacted us for help with creating a private RPC using MetaMask.Summary• Customer needs help with creating a private RPC using MetaMask.
+• Teammate suggests creating a node and configuring MetaMask to use the RPC provided by the node.
+• Teammate provides a link for setting up a node.
+• Teammate's name is Christian and they work for MetaMask.
+• Teammate offers to help with any other issues and ends the conversation."
+- "Question
+The customer contacted us for assistance with implementing MetaMask payment in Python Django using MetaMask SDK on a mobile browser.Summary• Customer is having an issue with implementing MetaMask payment in Python Django using MetaMask SDK.
+• The connecting pop-up is not appearing when trying to connect the wallet from a mobile browser.
+• The customer used a CDN script to connect the MetaMask SDK.
+• A ticket has been raised and the team will reply within 1 business day.
+• The teammate asked for the customer's mobile OS, version, and browser."
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords in the summaries?**
+•
+customer
+teammate
+no
+available
+summary
+project
+metamask
+help
+their
