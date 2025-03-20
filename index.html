@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Intercom LLM Buddy</title>
+
+</head>
+
+<script src="script.js"></script>
+
+
+<body>
+  <div class=banner>
+    <img src="Intercom LLM BUddy.png" alt="Intercom Logo" class="header-image" />
+    <span>
+      Intercom LLM Buddy
+    </span>
+  </div>
+
+  <form onsubmit="submitSelection(); return false;">
+    <label for="scriptSelect">MetaMask Area:</label>
+    <select id="scriptSelect" name="scriptSelect" required>
+        <option value="" selected disabled hidden>-select-</option>
+        <option value="ramps5.py">Ramps</option>
+        <option value="bridges5.py">Bridges</option>
+        <option value="wallet5.py">Wallet</option>
+        <option value="card5.py">Card</option>
+        <option value="staking5.py">Staking</option>
+        <option value="swaps5.py">Swaps</option>
+        <option value="dashboard5.py">Dashboard</option>
+        <option value="snaps5.py">Snaps</option>
+        <option value="sdk5.py">SDK</option>
+        <option value="security5.py">Security</option>
+        <option value="walletapi5.py">Wallet API</option>
+    </select>
+    <br><br>
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" required>
+    <br><br>
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" required>
+    <br><br>
+    <button type="submit">Run</button>
+</form>
+
+</body>
+
+
+</script>
+
+
+</html>
+    

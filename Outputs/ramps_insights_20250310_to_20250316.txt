@@ -1,0 +1,62 @@
+🚀 **Analysis for Ramps**
+
+==================================================
+
+🔹 **Most Frequent Issue:**
+Buy (Count: 280)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Buy                                280       58.58%
+Sell                               198       41.42%
+
+🔹 **Why Are These Issues Happening?**
+Based on user summaries, common themes linked to these issues include:
+
+- "Question
+The customer contacted us because their ETH sale to be transferred to their bank account has not shown up after an hour.Summary• Customer sold ETH to be transferred to bank account, but it has not shown up.
+• Transaction was made an hour ago through Ramp provider.
+• Ramp has confirmed that the transaction is completed.
+• MetaMask acts as intermediary and does not process payments.
+• Customer has already spoken with Ramp and they have referred them to MetaMask for further assistance."
+- "Question
+The customer contacted us because they did not receive $300 worth of ETH in their MetaMask wallet after purchasing it from Coinbase.Summary• Customer purchased $300 worth of ETH from Coinbase but did not receive it in their MetaMask wallet.
+• Troubleshooting steps were provided, including checking transaction status, network and token configuration, and contacting Coinbase support.
+• Customer was transferred to a support agent and provided information about their MetaMask wallet version, browser, OS, and purchase details.
+• Support agent confirmed that the transaction was completed and the ETH was delivered to the customer's wallet.
+• Customer was reminded to never share personal information and the chat was closed."
+- "Question
+The customer contacted us to inquire about issues with a purchase.Summary• Customer is experiencing issues with a purchase and wants to know what is going on.
+• Agent requests for more information and transfers the customer to an agent.
+• Agent asks for a screenshot and informs the customer to not share personal information.
+• Agent explains that the purchase process is done by the provider and provides resources for further assistance.
+• Conversation ends with the agent checking in and closing the conversation due to inactivity."
+- "Question
+The customer contacted us for support with registration and direct purchase on minotaurus.io/es and is looking for an agent who speaks Spanish.Summary• Customer needs support with registration and direct purchase on minotaurus.io/es
+• Customer is looking for an agent who speaks Spanish
+• Agent Saggi is assigned to assist the customer
+• Agent reminds customer not to share personal information
+• Agent asks for detailed description of customer's query"
+- "Question
+The customer contacted us because they were unable to withdraw funds from Metamask due to bank restrictions.Summary• Customer is unable to withdraw from Metamask due to bank restrictions.
+• Customer is looking for alternative ways to withdraw funds, such as providing BSB and account details.
+• Teammate suggests using the "Sell" feature for ETH tokens or using swap or bridge options to convert other tokens to ETH.
+• Teammate also suggests withdrawing funds to an external exchange platform like Binance or Coinbase.
+• Teammate provides instructions on how to sell ETH in Metamask."
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords in the summaries?**
+•
+customer
+teammate
+metamask
+no
+their
+available
+summary
+question
+contacted

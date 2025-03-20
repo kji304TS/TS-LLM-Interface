@@ -1,3 +1,9 @@
-ramps.py 
-ramps_v2.py 
 ".env" 
+"client_secrets.json" 
+"credentials.json" 
+"*.xlsx"   # This will ignore all Excel files
+"Outputs/" 
+"output_files/" 
+"client_secrets.json" 
+"credentials.json" 
+

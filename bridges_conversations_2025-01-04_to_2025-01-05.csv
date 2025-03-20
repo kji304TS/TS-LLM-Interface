@@ -1,0 +1,175 @@
+conversation_id,summary,transcript,Bridge Issue
+765104,No summary available,"bot: Hi there!
+user: i need help transfering eth from optimism network to world chain 
+bot: To transfer ETH from Optimism to World Chain, you'll need to use a bridge that supports both networks. Unfortunately, our MetaMask bridge doesn't currently support World Chain. Here's what you can do:
+
+First, bridge your ETH from Optimism back to Ethereum mainnet using the official Optimism bridge (https://app.optimism.io/bridge/deposit).
+Once your ETH is on Ethereum mainnet, visit the World Chain's official website (https://world.org/world-chain) to find supported bridges for transferring to World Chain.
+Use one of the supported bridges to move your ETH from Ethereum mainnet to World Chain.
+
+Remember to keep some ETH for gas fees on each network during the process.
+Source:Network profile: Optimism (OP Mainnet) | MetaMask Help Center 🦊♥️
+bot: Did that answer your question?",Network/token not supported
+765942,"Question
+The customer contacted us because they did not receive ETH sent from another app to their MetaMask wallet via BSC network.Summary• Customer did not receive ETH sent from another app to their MetaMask wallet via BSC network.
+• Customer provided transaction hash and confirmed wallet address.
+• Teammate asked for screenshot of wallet assets and if BNB network was added.
+• Customer later found the tokens and apologized for misunderstanding.
+• Conversation ended with teammate checking if customer could see the tokens and closing the conversation due to inactivity.","bot: There are a few reasons why you might not see the payment in your MetaMask account:
+
+Network mismatch: Ensure you're on the correct network in MetaMask. If the funds were sent on a different network, you'll need to add that network to your wallet.
+Token not imported: If the token isn't automatically displayed, you may need to import it manually. You can do this by:• Going to your MetaMask wallet• Searching for ""Import tokens"" under the correct network• Clicking on ""Custom Token""• Entering the token's contract address
+Transaction verification: Use a block explorer (like etherscan.com for Ethereum) to check if the transaction was successful. Enter your wallet address in the search bar to view all transactions.
+
+If the transaction is confirmed on the blockchain but still not visible in MetaMask, try the steps above. If issues persist, you may need to contact the sending app's support for more information.
+bot: Was that helpful?
+user: Talk to a person 👤
+bot: We just need a bit more information to connect you with the right person.
+bot: Please select the MetaMask app that's related to your inquiry.
+bot: What version of MetaMask mobile are you using?
+bot: Which operating system are you using?
+bot: Please select the network that's related to your inquiry.
+bot: Please share your MetaMask public address (starting with 0x). 
+bot: Please provide a detailed description of your query for our agents.
+user: I had been sent Eth from other app to this wallet via bnb chain I didn’t get it yet
+bot: You are now being transferred to an agent.
+bot: Hey there! Just letting you know that all our agents are helping other customers right now, but you're in line. Someone will be with you real soon. Thanks for hanging in there!
+bot: Hey, just a quick update: we're super busy, but we're getting closer to your turn. Thanks for sticking around.
+user: Hi
+bot: It’s a busy day on our end, but hang tight, we haven’t forgotten about you! Your turn is coming up. Really appreciate your patience!
+bot: Still waiting? This is an automated check. Please reply below to keep your place in line👇
+bot: Thanks for confirming! You're still in the queue. An agent will connect with you as soon as possible.
+user: ١
+admin: Hi there, thank you for reaching out to MetaMask support! This is Andrew, how may I help you today?
+It would be really helpful if you could confirm your MetaMask version, you can find it on 'settings', and then 'About' Also just to confirm, which web browser are you using? Thank you!
+user: Ok let me check
+user: 7.37.1 v
+user: im using iOS app
+admin: Thank you for the informationHow may I help you today? 
+user: I had been transferred Eth from othe   app to this 
+user: Wallet 
+user: via bsc
+user: i did not get yet
+user: its had been almost  Three hour, 
+user: 
+admin: Can you please give me the transaction hash? 
+user: 0xf2bb59424217c08640ebef2ddda0144a7d962d943001dd19b36d5aa958f46c6e
+admin: Is this your Metamask wallet address 0xDF8645337D674601E18d25B8098A532Aa09b56b6? 
+user: Yes
+admin: Can you please send me a screenshot of your Metamask wallet showing your assets? 
+user: 
+admin: HAve you added the BNB network to your wallet? 
+bot: Just checking back in, let us know if you need more time. If we don't hear back from you in 10 min we will close this conversation due to inactivity
+admin: Are we still connected? 
+user: Yes
+user: I did not receive it also there
+admin: Please send me a screenshot of your Metamask wallet showing the assets on the BNB network
+user: For my misunderstanding I found it thx and sorry 
+admin: Can you see the tokens?
+bot: Just checking back in, let us know if you need more time. If we don't hear back from you in 10 min we will close this conversation due to inactivity
+bot: We're going to go ahead and wrap up this conversation.
+Send us a message if you need anything else.
+bot: If you have 30 seconds, please rate your experience below and share any feedback you have. We’d love to hear from you!
+bot: [Conversation Rating Request]",Haven't received the funds
+765057,"Question
+The customer contacted us because they did not see their bridged Polygon funds in their Ethereum wallet.Summary• Customer bridged $980 worth of Polygon to Ethereum but did not see it in their wallet
+• Teammate confirmed customer's version and public address
+• Teammate checked transaction and confirmed ETH was sent to customer's wallet on Ethereum mainnet
+• Customer did not see ETH in their MetaMask wallet at first, but it eventually showed up
+• Teammate reminded customer to never share sensitive information and offered further assistance if needed.","bot: To locate your recent bridge transaction, you can follow these steps:
+
+Open MetaMask and go to the 'Activity' tab of your account. Your transaction should appear there, showing whether you were sending or receiving.
+Click on the transaction to view its details. You'll see an option to 'View on block explorer' which will provide more information.
+Alternatively, you can directly check the blockchain explorer:• Copy your wallet address from MetaMask• Go to the appropriate block explorer for the network you used• Paste your address into the search bar• Look for your transaction in the list provided
+
+Remember, a bridge transaction involves multiple steps on different networks, so you may need to check both the source and destination network explorers. If you're having trouble locating the transaction, double-check that you've completed both the approval and the actual bridge transaction.
+Sources:How do I find my transactions? | MetaMask Help Center 🦊♥️What happens when I initiate a transfer on a bridge? | MetaMask Help Center 🦊♥️How to check my wallet activity on the blockchain explorer | MetaMask Help Center 🦊♥️How do I find my transactions? | MetaMask Help Center 🦊♥️
+bot: Is that what you were looking for?
+user: Talk to a person 👤
+bot: We just need a bit more information to connect you with the right person.
+bot: Please select the MetaMask app that's related to your inquiry.
+bot: What version of MetaMask extension are you using?
+bot: Which operating system are you using?
+bot: Please select the network that's related to your inquiry.
+bot: Please share your MetaMask public address (starting with 0x). 
+bot: Please provide a detailed description of your query for our agents.
+user: I bridged 980$ worth of Polygon to ethereum but I dont see it in my portfolio
+bot: You are now being transferred to an agent.
+bot: Hey there! Just letting you know that all our agents are helping other customers right now, but you're in line. Someone will be with you real soon. Thanks for hanging in there!
+bot: Hey, just a quick update: we're super busy, but we're getting closer to your turn. Thanks for sticking around.
+admin: Hi, thank you for reaching out to MetaMask support! This is Codsworth, I'll be happy to help you today.First, just to be sure, your version is 12.9.3 and your public address is 0x285EFcA1f0841e185Eb60368c859D31F3D01A103 right?
+user: hi there! how do i confirm which version it is?
+admin: You can confirm your version by going to Settings &gt; About and then there it is shown
+user: ok it says 12.6.2
+admin: Okay cool so you bridged 980 worth of Polygon to Ethereum and you don't see it in your wallet?
+user: correcyt
+admin: I see, one moment please
+admin: When you bridged your Pol did you swap it to ETH as well?
+user: 
+user: yes I chose eth on the right side when bridging
+admin: Seeing this transaction I see that the ETH was sent into your wallet on the ethereum mainnetDo you not see this amount of ETH on your balance now?
+
+user: is that in metamask? cause i dont see it in my metamask wallet
+admin: Should be on MetaMask could you show me a screenshot of how this appears?
+user: wait!! I think it just came through!! i guess it just tool a little long! I was sweating! lol 
+admin: Ah! okay great! glad it finally showed up then. But maybe is there anything else I can assist you with?
+user: Thats all
+user: thank you! you were very helpful
+admin: Alright, Thank you very much again for reaching out to MetaMask support.You can always come back to us, or to our Knowledge Base if you need further assistance. Safety Tip: Never share your secret recovery phrase, private key, personal information, or password with anyone.I hope you have a great one!
+bot: If you have 30 seconds, please rate your experience below and share any feedback you have. We’d love to hear from you!
+bot: [Conversation Rating Request]
+bot: Thank you for providing your feedback! Want to give us more feedback? Leave us a comment here.
+bot: In case you need further assistance, please click the relevant button below.",Haven't received the funds
+765047,No summary available,"bot: To transfer SOL from the BNB Smart Chain to the Ethereum network, you'll need to use a bridge. A bridge allows you to transfer tokens between different blockchain networks. You can't directly send tokens from one blockchain to another, as they remain on their original chain.
+We recommend using the MetaMask bridge feature in our Portfolio dApp for this process. You can find detailed instructions on how to use the MetaMask Bridge here: MetaMask Bridge Instructions.
+Remember, you'll need to have enough BNB tokens in your wallet to cover the gas fees for the bridging transaction.
+bot: Did that answer your question?
+user: enough mean how much
+bot: The exact amount of BNB needed for gas fees when bridging SOL from BNB Smart Chain to Ethereum varies and isn't fixed. Gas fees fluctuate based on network traffic and can change frequently. To know the precise amount, you'll need to initiate the transaction in MetaMask, which will then display the required gas fees.
+When using the MetaMask bridge, you'll pay:
+
+Gas fees on the source network (BNB Smart Chain in this case)
+The MetaMask fee (0.875% of the total transaction value)
+Any fees charged by bridge providers
+Gas fees on the destination network (Ethereum)
+
+Generally, BNB Smart Chain fees are lower compared to Ethereum. You'll need some BNB tokens in your wallet to cover these gas fees, otherwise, you won't be able to perform the transaction.
+Sources:Network profile: BNB Smart Chain (BNB) | MetaMask Help Center 🦊♥️How to use the bridge | MetaMask Help Center 🦊♥️
+bot: Did that answer your question?
+user: That's it 👍
+bot: I'm glad I could help out!
+bot: Please rate the AI to understand how it is doing:
+bot: [Conversation Rating Request]
+bot: In case you need further assistance, please click the relevant button below.
+bot: Please click on the 'send us a message' button on the main page for further assistance.",User Training
+765918,No summary available,"bot: Hi there!
+user: I have USDT in BINANCE smart chain network. 
+bot: To manage or transfer your USDT on the Binance Smart Chain (BSC) network using MetaMask, follow these steps:
+
+Add the BSC network to MetaMask by clicking on the networks section and selecting ""Add"" next to Binance Smart Chain. If not visible, you may need to manually add the network.
+Import the USDT token by clicking ""Import token,"" then ""Custom tokens."" Paste the USDT contract address for BSC: 0x55d398326f99059fF775485246999027B3197955. The token symbol and decimals will auto-fill.
+Ensure you have BNB tokens in your wallet to cover gas fees for any transactions on the BSC network.
+When transferring USDT, select the BSC network in MetaMask and use your recipient's BSC address.
+
+Remember, all transactions on BSC require BNB for gas fees.
+bot: Did that answer your question?
+user: How to transfer to ETH mainnet 
+bot: To transfer your USDT from the Binance Smart Chain (BSC) network to the Ethereum mainnet using MetaMask, you'll need to use a bridge. Here's how:
+
+Use the MetaMask Bridge feature in the MetaMask Portfolio dApp. This allows you to transfer tokens between different blockchain networks.
+Follow the instructions in our guide on how to use the MetaMask Bridge: MetaMask Bridge Instructions.
+Remember, you can't directly send tokens from one blockchain to another. The bridge facilitates this transfer between different networks.
+Ensure you have enough native tokens (BNB for BSC, ETH for Ethereum) to cover gas fees on both networks.
+
+If you need more detailed guidance, check our Field Guide to Bridges.
+bot: Did that answer your question?",User Training
+763907,No summary available,"bot: Hi there!
+user: How can i transfer usdc from arbitrium to etheruim network
+bot: To transfer USDC from the Arbitrum network to the Ethereum network, you'll need to use a bridge. Here's how you can do it:
+
+Use the MetaMask bridge feature in the MetaMask Portfolio dApp. You can find instructions on how to use this bridge in our guide: MetaMask Bridge Instructions.
+Alternatively, you can use the official Arbitrum bridge available at bridge.arbitrum.io, or explore other bridge options listed on the Arbitrum portal.
+
+Remember, you'll need some ETH on the Arbitrum network to cover gas fees for the bridging transaction. Make sure you have sufficient funds before initiating the transfer.
+Source:Network profile: Arbitrum | MetaMask Help Center 🦊♥️
+bot: Is that what you were looking for?",User Training

@@ -1,0 +1,56 @@
+🚀 **Analysis for Snaps**
+
+==================================================
+
+🔹 **Most Frequent Issue:**
+General Question (Count: 1)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+General Question                   1         100.00%
+
+🔹 **Why Are These Issues Happening?**
+Based on user summaries, common themes linked to these issues include:
+
+- "Question
+The customer contacted us because they were having trouble using the Solana Snap on the MetaMask extension.Summary• Solana Snap is not working on MetaMask extension.
+• Troubleshooting steps include updating MetaMask and the Snap, reinstalling the Snap, checking permissions, and contacting Snap developers.
+• User requested to talk to a person and raised a ticket for the issue.
+• Teammate confirmed that the Solana Snap only works with Solflare and cannot be used with other Dapps.
+• User expressed difficulty in interacting with Solana and teammate clarified that only features enabled by Solflare can be used."
+- "Question
+The customer contacted us for assistance with using the Solflare snap to view cryptos transferred via the Solana network on MetaMask.Summary• Solana network is not natively supported on MetaMask.
+• A snap developed by Solflare can be used to view cryptos transferred via the Solana network.
+• For questions about the snap, contact Solflare's support team.
+• The customer can refer to MetaMask's Knowledge Base for further help.
+• The teammate's name is Nema."
+- "Question
+The customer contacted us due to an error with gas on the Poly Network.Summary• Customer experienced an error with gas on the Poly Network and contacted MetaMask Support.
+• Teammate requested wallet address and screenshot of error.
+• Customer's issue resolved itself after a few hours.
+• Teammate provided information on Snaps and Infura.
+• Teammate requested feedback and provided contact information for future inquiries."
+- "Question
+The customer is having trouble installing a Snap for The Stargaze website that supports MetaMask via Snaps.Summary• Customer is having trouble installing a Snap for The Stargaze website that supports MetaMask via Snaps.
+• When trying to install the Snap, they are prompted to install the MetaMask extension even though it is already installed.
+• Customer needs assistance with installing the Snap.
+• Teammate has raised a ticket for the issue and will reply via email.
+• Teammate has asked for confirmation on what happens when the customer clicks "connect wallet" on the website."
+- "No summary available"
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords in the summaries?**
+•
+no
+summary
+available
+customer
+snap
+metamask
+solana
+teammate
+via
