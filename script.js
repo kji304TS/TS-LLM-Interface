@@ -8,7 +8,7 @@ function submitSelection() {
         return;
     }
 
-    fetch("https://your-app.onrender.com/run-script/", {
+    fetch("https://script-runner-soc8.onrender.com/run-script/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ script_name: script, start_date: startDate, end_date: endDate }),
