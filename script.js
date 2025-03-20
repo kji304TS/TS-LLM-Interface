@@ -15,5 +15,6 @@ function submitSelection() {
     })
     .then(response => response.json())
     .then(data => alert(`Script Output: ${data.output}`))
-    .catch(error => alert(`Error: ${error}`));
+    .catch(error => alert(`Error: ${error.message}`));
 }
+
