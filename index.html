@@ -4,22 +4,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Run Python Scripts</title>
+  <link rel="stylesheet" href="style.css">
+  <title>Intercom LLM Buddy</title>
+
 </head>
 
 <body>
-  <h1>Run Python Scripts</h1>
-  <form action="/run" method="POST">
-    <label for="script_name">Select Script:</label>
+  <div class=banner>
+    <img src="Intercom LLM BUddy.png" alt="Intercom Logo" class="header-image" />
+    <span>
+      Intercom LLM Buddy
+    </span>
+  </div>
+
+
+
+
+
+  <form action=" /run" method="POST">
+    <label for="script_name">MetaMask Area:</label>
     <select id="script_name" name="script_name" required>
-      <option value="ramps_v4.py">Ramps</option>
-      <option value="staking.py">Staking</option>
-      <option value="script3.py">Script 3</option>
-      <option value="script4.py">Script 4</option>
-      <option value="script5.py">Script 5</option>
-      <option value="script6.py">Script 6</option>
-      <option value="script7.py">Script 7</option>
-      <option value="script8.py">Script 8</option>
+      <option value="" selected disabled hidden>-select-</option>
+      <option value="ramps5.py">Ramps</option>
+      <option value="bridges5.py">Bridges</option>
+      <option value="wallet5.py">Wallet</option>
+      <option value="card5.py">Card</option>
+      <option value="staking5.py">Staking</option>
+      <option value="swaps5.py">Swaps</option>
+      <option value="dashboard5.py">Dashboard</option>
+      <option value="snaps5.py">Snaps</option>
+      <option value="sdk5.py">SDK</option>
+      <option value="security5.py">Security</option>
+      <option value="walletapi5.py">Wallet API</option>
+
     </select>
     <br><br>
     <label for="start_date">Start Date:</label>
@@ -32,4 +49,9 @@
   </form>
 </body>
 
+
+</script>
+
+
 </html>
+    
