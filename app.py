@@ -5,6 +5,7 @@ import os
 import traceback
 import json
 import importlib
+import traceback
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
@@ -57,13 +58,13 @@ def run_script(data: ScriptRequest):
         }
 
     except Exception as e:
-        print("❌ Error while running script:")
-        traceback.print_exc()
-        return {
-            "output": f"Failed to run {data.script_name}",
-            "error": str(e),
-            "status": "failed"
-        }
+    print("❌ Error while running script:")
+    traceback.print_exc()
+    return {
+        "output": f"Failed to run {data.script_name}",
+        "error": str(e),
+        "status": "failed"
+    }
 
 # Google Drive uploader using env-based credentials
 def upload_file_to_drive(file_path: str) -> str:
