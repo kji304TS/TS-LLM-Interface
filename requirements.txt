@@ -1,2 +1,8 @@
 fastapi
 uvicorn
+pydrive
+pydantic
+pandas
+openpyxl
+
+
