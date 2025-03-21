@@ -1,20 +1,15 @@
 from fastapi import FastAPI
-import subprocess
+from pydantic import BaseModel
 
 app = FastAPI()
 
-# Health check
-@app.get("/")
-def home():
-    return {"message": "Script Runner API is running"}
+class ScriptRequest(BaseModel):
+    script_name: str
+    start_date: str
+    end_date: str
 
-# Run scripts
 @app.post("/run-script/")
-def run_script(script_name: str, start_date: str, end_date: str):
-    try:
-        # Replace with your actual script path
-        result = subprocess.run(["python", f"./scripts/{script_name}.py", start_date, end_date], capture_output=True, text=True)
-        
-        return {"status": "success", "output": result.stdout}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+def run_script(data: ScriptRequest):
+    # Your logic here
+    return {"output": f"Running {data.script_name} from {data.start_date} to {data.end_date}"}
+
