@@ -12,6 +12,14 @@ function submitSelection(event) {
         return;
     }
 
+    console.log("📤 Sending request to /run-script/");
+    console.log("Payload:", {
+        script_name: script,
+        start_date: startDate,
+        end_date: endDate
+    });
+
+
     // Send the form data to the backend API
     fetch("https://intercom-llm-buddy.onrender.com/run-script/", {
         method: "POST",
