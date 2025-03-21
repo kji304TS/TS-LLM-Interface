@@ -4,5 +4,5 @@ pydrive
 pydantic
 pandas
 openpyxl
-
+python-dotenv
 
