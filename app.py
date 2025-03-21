@@ -5,8 +5,10 @@ import os
 import traceback
 import importlib
 import json
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+
 
 app = FastAPI()
 
@@ -70,48 +72,45 @@ def run_script(data: ScriptRequest):
 
 # Upload file to Google Drive
 def upload_file_to_drive(file_path: str) -> str:
-    print("🔐 Authenticating with Google Drive...")
+    print("🔐 Authenticating with Google Service Account...")
 
-    creds_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
-    if not creds_str:
-        raise ValueError("GOOGLE_CREDENTIALS_JSON is not set")
+    # Load service account credentials from env
+    creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+    if not creds_json:
+        raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON is not set")
 
-    with open("credentials.json", "w") as f:
-        f.write(creds_str)
+    creds_dict = json.loads(creds_json)
+    creds = service_account.Credentials.from_service_account_info(
+        creds_dict, scopes=["https://www.googleapis.com/auth/drive"]
+    )
 
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("credentials.json")
-
-    if gauth.credentials is None:
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        gauth.Refresh()
-    else:
-        gauth.Authorize()
-
-    gauth.SaveCredentialsFile("credentials.json")
-    drive = GoogleDrive(gauth)
+    drive_service = build("drive", "v3", credentials=creds)
 
     folder_id = os.getenv("GDRIVE_FOLDER_ID")
     if not folder_id:
         raise ValueError("GDRIVE_FOLDER_ID is not set")
 
-    file_name = os.path.basename(file_path)
-    file = drive.CreateFile({
-        "title": file_name,
-        "parents": [{"id": folder_id}]
-    })
-    file.SetContentFile(file_path)
-    file.Upload()
+    file_metadata = {
+        "name": os.path.basename(file_path),
+        "parents": [folder_id]
+    }
 
-    file.InsertPermission({
-        'type': 'anyone',
-        'value': 'anyone',
-        'role': 'reader'
-    })
+    media = MediaFileUpload(file_path, resumable=True)
+    uploaded_file = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields="id"
+    ).execute()
 
-    print(f"✅ File '{file_name}' uploaded to Google Drive.")
-    return f"https://drive.google.com/file/d/{file['id']}/view"
+    # Make the file publicly viewable
+    drive_service.permissions().create(
+        fileId=uploaded_file["id"],
+        body={"type": "anyone", "role": "reader"}
+    ).execute()
+
+    file_url = f"https://drive.google.com/file/d/{uploaded_file['id']}/view"
+    print(f"✅ File uploaded: {file_url}")
+    return file_url
 
 
 
