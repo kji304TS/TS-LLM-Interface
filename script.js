@@ -1,6 +1,8 @@
+// Function to handle form submission
 function submitSelection(event) {
-    event.preventDefault(); // Prevent the page from refreshing
+    event.preventDefault(); // Prevents page reload
 
+    // Get user inputs
     const script = document.getElementById("scriptSelect").value;
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
@@ -10,7 +12,7 @@ function submitSelection(event) {
         return;
     }
 
-    // Send the form data to the backend (Render API)
+    // Send the form data to the backend API
     fetch("https://intercom-llm-buddy.onrender.com/run-script/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -18,7 +20,7 @@ function submitSelection(event) {
     })
     .then(response => response.json())
     .then(data => {
-        alert(`Script Output: ${data.output}`); // Show the API response
+        alert(`Script Output: ${data.output}`); // Show backend response in alert
     })
     .catch(error => {
         alert(`Error: ${error.message}`);
@@ -28,5 +30,6 @@ function submitSelection(event) {
 
 // Attach the function to the form submit event
 document.getElementById("scriptForm").addEventListener("submit", submitSelection);
+
 
 
