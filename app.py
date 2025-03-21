@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import os
 import traceback
 import json
+import importlib
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
@@ -32,36 +33,31 @@ def read_root():
 # Run script and upload result to Google Drive
 @app.post("/run-script/")
 def run_script(data: ScriptRequest):
-    print(f"▶️ Received request to run: {data.script_name} from {data.start_date} to {data.end_date}")
+    print(f"✅ Received request to run: {data.script_name} from {data.start_date} to {data.end_date}")
 
     try:
-        # Step 1: Run the script
-        script_path = f"scripts/{data.script_name}"
-        command = f"python {script_path} {data.start_date} {data.end_date}"
-        print(f"📄 Executing command: {command}")
-        result_code = os.system(command)
+        # Remove .py extension to get module name
+        module_name = data.script_name.replace(".py", "")
+        print(f"📦 Importing module: scripts.{module_name}")
 
-        if result_code != 0:
-            raise RuntimeError(f"Script exited with non-zero code: {result_code}")
+        # Import the module dynamically from scripts directory
+        script_module = importlib.import_module(f"scripts.{module_name}")
 
-        # Step 2: Locate the expected output file
-        output_file = "wallet_conversations.xlsx"  # Change if script outputs differently
-        if not os.path.exists(output_file):
-            raise FileNotFoundError(f"Output file not found: {output_file}")
-
-        # Step 3: Upload file to Google Drive
-        print("📤 Uploading file to Google Drive...")
-        drive_url = upload_file_to_drive(output_file)
-        print(f"✅ Upload successful: {drive_url}")
+        # Check and call the main_function
+        if hasattr(script_module, 'main_function'):
+            print("🚀 Executing main_function...")
+            result = script_module.main_function(data.start_date, data.end_date)
+            print(f"✅ Script completed: {result if result else 'No return value'}")
+        else:
+            raise AttributeError(f"'main_function' not found in {data.script_name}")
 
         return {
             "output": f"{data.script_name} completed successfully.",
-            "drive_url": drive_url,
             "status": "success"
         }
 
     except Exception as e:
-        print("❌ Error during execution:")
+        print("❌ Error while running script:")
         traceback.print_exc()
         return {
             "output": f"Failed to run {data.script_name}",
