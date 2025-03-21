@@ -6,21 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <title>Intercom LLM Buddy</title>
-
 </head>
 
-<script src="script.js"></script>
-
-
 <body>
-  <div class=banner>
+  <div class="banner">
     <img src="intercom-llm-buddy-logo.png" alt="Intercom Logo" class="header-image" />
     <span>
       Intercom LLM Buddy
     </span>
   </div>
 
-  <form onsubmit="submitSelection(); return false;">
+  <!-- Updated Form with ID for JavaScript -->
+  <form id="scriptForm">
     <label for="scriptSelect">MetaMask Area:</label>
     <select id="scriptSelect" name="scriptSelect" required>
         <option value="" selected disabled hidden>-select-</option>
@@ -44,13 +41,15 @@
     <input type="date" id="endDate" name="endDate" required>
     <br><br>
     <button type="submit">Run</button>
-</form>
+  </form>
 
+  <!-- Moved script.js to the end to ensure DOM is loaded before execution -->
+  <script src="script.js"></script>
 </body>
 
-
-</script>
-
-
 </html>
+
+
+
+
     
