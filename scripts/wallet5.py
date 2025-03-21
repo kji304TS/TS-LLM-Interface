@@ -180,22 +180,31 @@ def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
     if not conversations:
         print("No conversations found for the provided timeframe.")
-        return
+        return "No conversations found"
+
     wallet_conversations = filter_conversations_by_wallet(conversations)
     print(f"Wallet Conversations Found: {len(wallet_conversations)}")
+
     if wallet_conversations:
         file_path = f'wallet_conversations_{start_date}_to_{end_date}.xlsx'
         store_conversations_to_xlsx(wallet_conversations, file_path)
         upload_to_drive(file_path)
         print(f"File {file_path} uploaded successfully.")
+        return f"✅ File uploaded: {file_path}"
     else:
         print("No wallet-related conversations found.")
+        return "No wallet-related conversations found"
+
 
 if __name__ == "__main__":
+    
+
     if len(sys.argv) != 3:
         print("Usage: python script.py <start_date> <end_date>")
         sys.exit(1)
+
     start_date = sys.argv[1]
     end_date = sys.argv[2]
     print(f"Script started with start_date: {start_date} and end_date: {end_date}")
     main_function(start_date, end_date)
+
