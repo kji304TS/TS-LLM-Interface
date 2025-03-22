@@ -8,6 +8,7 @@ import json
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from googleapiclient.errors import HttpError
 
 
 app = FastAPI()
@@ -74,43 +75,51 @@ def run_script(data: ScriptRequest):
 def upload_file_to_drive(file_path: str) -> str:
     print("🔐 Authenticating with Google Service Account...")
 
-    # Load service account credentials from env
-    creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    if not creds_json:
-        raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON is not set")
+    try:
+        creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+        if not creds_json:
+            raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON is not set")
 
-    creds_dict = json.loads(creds_json)
-    creds = service_account.Credentials.from_service_account_info(
-        creds_dict, scopes=["https://www.googleapis.com/auth/drive"]
-    )
+        creds_dict = json.loads(creds_json)
+        creds = service_account.Credentials.from_service_account_info(
+            creds_dict, scopes=["https://www.googleapis.com/auth/drive"]
+        )
 
-    drive_service = build("drive", "v3", credentials=creds)
+        drive_service = build("drive", "v3", credentials=creds)
 
-    folder_id = os.getenv("GDRIVE_FOLDER_ID")
-    if not folder_id:
-        raise ValueError("GDRIVE_FOLDER_ID is not set")
+        folder_id = os.getenv("GDRIVE_FOLDER_ID")
+        if not folder_id:
+            raise ValueError("GDRIVE_FOLDER_ID is not set")
 
-    file_metadata = {
-        "name": os.path.basename(file_path),
-        "parents": [folder_id]
-    }
+        file_metadata = {
+            "name": os.path.basename(file_path),
+            "parents": [folder_id]
+        }
 
-    media = MediaFileUpload(file_path, resumable=True)
-    uploaded_file = drive_service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields="id"
-    ).execute()
+        media = MediaFileUpload(file_path, resumable=True)
+        uploaded_file = drive_service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields="id"
+        ).execute()
 
-    # Make the file publicly viewable
-    drive_service.permissions().create(
-        fileId=uploaded_file["id"],
-        body={"type": "anyone", "role": "reader"}
-    ).execute()
+        # Make the file publicly viewable
+        drive_service.permissions().create(
+            fileId=uploaded_file["id"],
+            body={"type": "anyone", "role": "reader"}
+        ).execute()
 
-    file_url = f"https://drive.google.com/file/d/{uploaded_file['id']}/view"
-    print(f"✅ File uploaded: {file_url}")
-    return file_url
+        file_url = f"https://drive.google.com/file/d/{uploaded_file['id']}/view"
+        print(f"✅ File uploaded: {file_url}")
+        return file_url
+
+    except HttpError as error:
+        print(f"❌ Google Drive API error: {error}")
+        raise
+
+    except Exception as e:
+        print(f"❌ Unexpected error during upload: {e}")
+        raise
 
 
 
