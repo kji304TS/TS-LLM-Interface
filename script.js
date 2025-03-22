@@ -1,25 +1,21 @@
 // Function to handle form submission
 function submitSelection(event) {
-    event.preventDefault(); // Prevents page reload
+    event.preventDefault(); // Prevent form reload
 
-    // Get user inputs
     const script = document.getElementById("scriptSelect").value;
     const startDate = document.getElementById("startDate").value;
     const endDate = document.getElementById("endDate").value;
+    const statusMessage = document.getElementById("statusMessage");
 
     if (!script || !startDate || !endDate) {
-        alert("Please fill in all fields.");
+        statusMessage.textContent = "⚠️ Please fill in all fields.";
         return;
     }
 
-    console.log("📤 Sending request to /run-script/");
-    console.log("Payload:", {
-        script_name: script,
-        start_date: startDate,
-        end_date: endDate
-    });
+    // Show "Running..." message
+    statusMessage.textContent = "🔄 Running script... Please wait.";
 
-    // Send the form data to the backend API
+    // Send the form data to the backend
     fetch("https://intercom-llm-buddy.onrender.com/run-script/", {
         method: "POST",
         mode: "cors",
@@ -34,17 +30,17 @@ function submitSelection(event) {
     })
     .then(response => response.json())
     .then(data => {
-        alert(`Script Output: ${data.output}`);
+        if (data.drive_url) {
+            statusMessage.innerHTML = `✅ Script finished! <a href="${data.drive_url}" target="_blank">View file in Google Drive</a>`;
+        } else {
+            statusMessage.textContent = `✅ ${data.output}`;
+        }
     })
     .catch(error => {
-        alert(`Error: ${error.message}`);
         console.error("API call failed:", error);
+        statusMessage.textContent = `❌ Error: ${error.message}`;
     });
 }
 
-// ✅ Close the function properly here ↑
-
-
-// Attach the function to the form submit event
+// Attach submit handler to form
 document.getElementById("scriptForm").addEventListener("submit", submitSelection);
-
