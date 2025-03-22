@@ -6,8 +6,9 @@ import sys
 from dotenv import load_dotenv
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+from app import upload_file_to_drive
+
+
 
 # Load environment variables
 load_dotenv()
@@ -159,22 +160,7 @@ def store_conversations_to_xlsx(conversations, file_path):
     workbook.save(file_path)
     print(f"File {file_path} saved successfully.")
 
-def upload_to_drive(file_path):
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("credentials.json")
-    if gauth.credentials is None:
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        gauth.Refresh()
-    else:
-        gauth.Authorize()
-    gauth.SaveCredentialsFile("credentials.json")
-    
-    drive = GoogleDrive(gauth)
-    file = drive.CreateFile({"title": os.path.basename(file_path), "parents": [{"id": GDRIVE_FOLDER_ID}]})
-    file.SetContentFile(file_path)
-    file.Upload()
-    print(f"File {file_path} uploaded successfully to Google Drive.")
+
 
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
@@ -188,7 +174,7 @@ def main_function(start_date, end_date):
     if wallet_conversations:
         file_path = f'wallet_conversations_{start_date}_to_{end_date}.xlsx'
         store_conversations_to_xlsx(wallet_conversations, file_path)
-        upload_to_drive(file_path)
+        upload_file_to_drive(file_path)  # ✅ Call the correct upload function
         print(f"File {file_path} uploaded successfully.")
         return f"✅ File uploaded: {file_path}"
     else:
