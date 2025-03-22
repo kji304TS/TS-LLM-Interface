@@ -19,32 +19,32 @@ function submitSelection(event) {
         end_date: endDate
     });
 
-
     // Send the form data to the backend API
-   fetch("https://intercom-llm-buddy.onrender.com/run-script/", {
-    method: "POST",
-    mode: "cors",  // ✅ Ensure CORS is allowed
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        script_name: script,
-        start_date: startDate,
-        end_date: endDate
+    fetch("https://intercom-llm-buddy.onrender.com/run-script/", {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            script_name: script,
+            start_date: startDate,
+            end_date: endDate
+        })
     })
-})
-.then(response => response.json())
-.then(data => {
-    alert(`Script Output: ${data.output}`);
-})
-.catch(error => {
-    alert(`Error: ${error.message}`);
-    console.error("API call failed:", error);
-});
+    .then(response => response.json())
+    .then(data => {
+        alert(`Script Output: ${data.output}`);
+    })
+    .catch(error => {
+        alert(`Error: ${error.message}`);
+        console.error("API call failed:", error);
+    });
+}
+
+// ✅ Close the function properly here ↑
 
 
 // Attach the function to the form submit event
 document.getElementById("scriptForm").addEventListener("submit", submitSelection);
-
-
 
