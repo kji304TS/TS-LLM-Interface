@@ -162,11 +162,17 @@ def store_conversations_to_xlsx(conversations, file_path):
 
 
 
+def standard_result(status: str, message: str, file_url: str = None):
+    return {
+        "status": status,
+        "message": message,
+        "file": file_url if file_url else None
+    }
+
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
     if not conversations:
-        print("No conversations found for the provided timeframe.")
-        return "No conversations found"
+        return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
 
     wallet_conversations = filter_conversations_by_wallet(conversations)
     print(f"Wallet Conversations Found: {len(wallet_conversations)}")
@@ -174,12 +180,15 @@ def main_function(start_date, end_date):
     if wallet_conversations:
         file_path = f'wallet_conversations_{start_date}_to_{end_date}.xlsx'
         store_conversations_to_xlsx(wallet_conversations, file_path)
-        upload_file_to_drive(file_path)  # ✅ Call the correct upload function
-        print(f"File {file_path} uploaded successfully.")
-        return f"✅ File uploaded: {file_path}"
+        
+        file_url = upload_file_to_drive(file_path)
+        print(f"File uploaded to Google Drive: {file_url}")
+
+        # ✅ Only show simple message in output
+        return standard_result("success", "✅ File uploaded: Complete")
+
     else:
-        print("No wallet-related conversations found.")
-        return "No wallet-related conversations found"
+        return standard_result("no_data", "🤷 No wallet-related conversations found.")
 
 
 if __name__ == "__main__":
@@ -193,4 +202,5 @@ if __name__ == "__main__":
     end_date = sys.argv[2]
     print(f"Script started with start_date: {start_date} and end_date: {end_date}")
     main_function(start_date, end_date)
+
 
