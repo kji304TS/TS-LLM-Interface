@@ -168,22 +168,28 @@ def store_conversations_to_xlsx(conversations, file_path):
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
     if not conversations:
-        print("No conversations found for the provided timeframe.")
-        return "No conversations found"
+        return {
+            "status": "no_data",
+            "message": "No conversations found for the provided timeframe.",
+            "file": None
+        }
 
     bridge_conversations = filter_conversations_by_bridge(conversations)
-    print(f"Bridge Conversations Found: {len(bridge_conversations)}")
-
     if bridge_conversations:
         file_path = f'bridge_conversations_{start_date}_to_{end_date}.xlsx'
         store_conversations_to_xlsx(bridge_conversations, file_path)
-        upload_file_to_drive(file_path)  # ✅ Call the correct upload function
-        print(f"File {file_path} uploaded successfully.")
-        return f"✅ File uploaded: {file_path}"
+        file_url = upload_file_to_drive(file_path)
+        return {
+            "status": "success",
+            "message": f"✅ File uploaded: {file_url}",
+            "file": file_url
+        }
     else:
-        print("No bridge-related conversations found.")
-        return "No bridge-related conversations found"
-
+        return {
+            "status": "no_data",
+            "message": "No bridge-related conversations found.",
+            "file": None
+        }
 
 
 if __name__ == "__main__":
