@@ -53,14 +53,23 @@ def run_script(data: ScriptRequest):
         if hasattr(script_module, "main_function"):
             print("🚀 Executing main_function...")
             result = script_module.main_function(data.start_date, data.end_date)
-            print(f"✅ Script completed: {result if result else 'No return value'}")
+
+            if isinstance(result, dict):
+                print(f"✅ Script completed: {result.get('message', 'No message')}")
+                return {
+                    "output": result.get("message", "Completed."),
+                    "status": result.get("status", "success"),
+                    "file": result.get("file")
+                }
+            else:
+                print("✅ Script completed with no structured result.")
+                return {
+                    "output": str(result),
+                    "status": "success"
+                }
+
         else:
             raise AttributeError(f"'main_function' not found in {data.script_name}")
-
-        return {
-            "output": f"{data.script_name} completed successfully.",
-            "status": "success"
-        }
 
     except Exception as e:
         print("❌ Error while running script:")
@@ -120,6 +129,7 @@ def upload_file_to_drive(file_path: str) -> str:
     except Exception as e:
         print(f"❌ Unexpected error during upload: {e}")
         raise
+
 
 
 
