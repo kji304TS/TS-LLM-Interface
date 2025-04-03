@@ -1,14 +1,12 @@
 import requests
 from datetime import datetime
-import csv
 import re
 import os
 import sys
 from dotenv import load_dotenv
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
+from app import upload_file_to_drive
 
 
 # Load environment variables
@@ -60,9 +58,22 @@ def get_conversation_transcript(conversation):
     return "\n".join(transcript) if transcript else "No transcript available"
 
 def search_conversations(start_date_str, end_date_str):
-    start_date = datetime.strptime(start_date_str, "%Y-%m-%d").timestamp()
-    end_date = datetime.strptime(end_date_str, "%Y-%m-%d").timestamp()
-    
+    try:
+        # Handle both "YYYY-MM-DD" and "YYYY-MM-DD HH:MM" formats
+        if " " in start_date_str:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M").timestamp()
+        else:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").timestamp()
+
+        if " " in end_date_str:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M").timestamp()
+        else:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").timestamp()
+
+    except ValueError as e:
+        print(f"Error parsing dates: {e}")
+        return []
+
     url = "https://api.intercom.io/conversations/search"
     headers = {
         "Authorization": f"Bearer {INTERCOM_PROD_KEY}",
@@ -87,13 +98,13 @@ def search_conversations(start_date_str, end_date_str):
     while True:
         if next_page:
             payload["pagination"]["starting_after"] = next_page  # Add pagination cursor
-
+        
         response = requests.post(url, headers=headers, json=payload)
 
         if response.status_code != 200:
             print(f"Error: {response.status_code} - {response.text}")
             return all_conversations  # Return whatever was retrieved so far
-
+        
         data = response.json()
         conversations = data.get('conversations', [])
         all_conversations.extend(conversations)  # Append new conversations
@@ -111,101 +122,79 @@ def search_conversations(start_date_str, end_date_str):
     return all_conversations
 
 
-def filter_conversations_by_product(conversations, product):
+def filter_conversations_by_bridge(conversations):
+    """Filters conversations for the MetaMask Wallet area and retrieves full conversation details"""
     filtered_conversations = []
     for conversation in conversations:
-        conversation = get_intercom_conversation(conversation['id'])  # Fetch full conversation details
-        if not conversation:
-            continue
-
         attributes = conversation.get('custom_attributes', {})
-        print(f"Custom Attributes for Conversation ID {conversation.get('id')}: {attributes}")  # Debugging
+        print(f"Custom Attributes: {attributes}")
 
-        # Check if MetaMask area matches the product
-        if attributes.get('MetaMask area', '').strip().lower() == product.lower():
-            filtered_conversations.append(conversation)
+        # Check if the conversation belongs to "Wallet"
+        if attributes.get('MetaMask area', '').strip().lower() == 'bridges':
+            full_conversation = get_intercom_conversation(conversation['id'])
+            if full_conversation:
+                full_conversation['Bridge issue'] = attributes.get('Bridge issue', 'None')
+                filtered_conversations.append(full_conversation)
 
-    print(f"Total Conversations Matching '{product}': {len(filtered_conversations)}")
     return filtered_conversations
 
 def store_conversations_to_xlsx(conversations, file_path):
+    """Stores filtered Wallet conversations into an XLSX file"""
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Conversations"
-
+    
+    # Include Wallet Issue column
     headers = ['conversation_id', 'summary', 'transcript', 'Bridge Issue']
     sheet.append(headers)
-
+    
     for conversation in conversations:
         conversation_id = conversation['id']
         summary = sanitize_text(get_conversation_summary(conversation))
-
-        # ✅ Ensure line breaks are properly formatted for Excel/Google Sheets
         transcript = sanitize_text(get_conversation_transcript(conversation))
-
-        bridge_issue = conversation.get('custom_attributes', {}).get('Bridge Issue', 'N/A')
-
-        # ✅ Append data correctly into separate columns
-        sheet.append([conversation_id, summary, transcript, bridge_issue])
-
-    # ✅ Apply text wrapping to the Transcript & Summary columns
-    for col in ["B", "C"]:  # Column B = Summary, Column C = Transcript
+        wallet_issue = conversation.get('custom_attributes', {}).get('Bridge issue', 'None')
+        
+        row = [conversation_id, summary, transcript, wallet_issue]
+        sheet.append(row)
+    
+    # Apply text wrapping to relevant columns
+    for col in ["B", "C", "D"]:  # Column B = Summary, Column C = Transcript, Column D = Wallet Issue
         for cell in sheet[col]:
             cell.alignment = Alignment(wrap_text=True)
-
+    
     workbook.save(file_path)
     print(f"File {file_path} saved successfully.")
 
-def upload_to_drive(file_path):
-    gauth = GoogleAuth()
-
-    # Try to load saved client credentials
-    gauth.LoadCredentialsFile("credentials.json")
-
-    if gauth.credentials is None:
-        gauth.LocalWebserverAuth()  # Authenticate if no credentials found
-    elif gauth.access_token_expired:
-        gauth.Refresh()  # Refresh credentials if expired
-    else:
-        gauth.Authorize()  # Just authorize if valid credentials exist
-
-    # Save the credentials for future use
-    gauth.SaveCredentialsFile("credentials.json")
-
-    drive = GoogleDrive(gauth)
-    file = drive.CreateFile({"title": os.path.basename(file_path), "parents": [{"id": GDRIVE_FOLDER_ID}]})
-    file.SetContentFile(file_path)
-    file.Upload()
-    print(f"File {file_path} uploaded successfully to Google Drive.")
-
-
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
+    if not conversations:
+        print("No conversations found for the provided timeframe.")
+        return "No conversations found"
 
-    if conversations:
-        bridges_conversations = filter_conversations_by_product(conversations, 'Bridges')  # ✅ Apply filter
-        print(f"Bridges Conversations: {len(bridges_conversations)}")  # Debugging
+    bridge_conversations = filter_conversations_by_bridge(conversations)
+    print(f"Bridge Conversations Found: {len(bridge_conversations)}")
 
-        file_path = f'bridges_conversations_{start_date}_to_{end_date}.xlsx'
-
-        # ✅ Call the function with the correct data (filtered conversations)
-        store_conversations_to_xlsx(bridges_conversations, file_path)
-
-        # ✅ Upload the generated file to Google Drive
-        upload_to_drive(file_path)
-
+    if bridge_conversations:
+        file_path = f'bridge_conversations_{start_date}_to_{end_date}.xlsx'
+        store_conversations_to_xlsx(bridge_conversations, file_path)
+        upload_file_to_drive(file_path)  # ✅ Call the correct upload function
+        print(f"File {file_path} uploaded successfully.")
+        return f"✅ File uploaded: {file_path}"
     else:
-        print('No conversations found for provided timeframe')
+        print("No bridge-related conversations found.")
+        return "No bridge-related conversations found"
 
 
 
 if __name__ == "__main__":
+    
+
     if len(sys.argv) != 3:
         print("Usage: python script.py <start_date> <end_date>")
         sys.exit(1)
 
     start_date = sys.argv[1]
     end_date = sys.argv[2]
-
     print(f"Script started with start_date: {start_date} and end_date: {end_date}")
     main_function(start_date, end_date)
+
