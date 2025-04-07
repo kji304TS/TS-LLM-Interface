@@ -117,29 +117,30 @@ def search_conversations(start_date_str, end_date_str):
 
 
 def filter_conversations_by_dashboard(conversations):
-    """Filters conversations for the MetaMask Dashboard area and retrieves full conversation details"""
+    """Filters conversations for the MetaMask Portfolio Dashboard area and retrieves full conversation details"""
     filtered_conversations = []
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
         print(f"Custom Attributes: {attributes}")
 
-        # Check if the conversation belongs to "Dashboard"
-        if attributes.get('MetaMask area', '').strip().lower() == 'dashboard':
+        # Updated: Check if the conversation belongs to "Portfolio Dashboard"
+        if attributes.get('MetaMask area', '').strip().lower() == 'portfolio dashboard':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
-                full_conversation['Dashboard issue'] = attributes.get('Dashboard issue', 'None')
+                full_conversation['Portfolio Dashboard issue'] = attributes.get('Dashboard issue', 'None')
                 filtered_conversations.append(full_conversation)
 
     return filtered_conversations
 
 
 def store_conversations_to_xlsx(conversations, file_path):
-    """Stores filtered Dashboard conversations into an XLSX file"""
+    """Stores filtered Portfolio Dashboard conversations into an XLSX file"""
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Conversations"
     
-    headers = ['conversation_id', 'summary', 'transcript', 'Dashboard Issue']
+    # Updated: Include Portfolio Dashboard Issue column
+    headers = ['conversation_id', 'summary', 'transcript', 'Portfolio Dashboard Issue']
     sheet.append(headers)
     
     for conversation in conversations:
@@ -147,13 +148,13 @@ def store_conversations_to_xlsx(conversations, file_path):
         summary = sanitize_text(get_conversation_summary(conversation))
         transcript = sanitize_text(get_conversation_transcript(conversation))
         
-        dashboard_issue = conversation.get('custom_attributes', {}).get('Dashboard Issue', 'N/A')
+        dashboard_issue = conversation.get('custom_attributes', {}).get('Dashboard issue', 'N/A')
         
         # Append data to the sheet
         sheet.append([conversation_id, summary, transcript, dashboard_issue])
     
     # Apply text wrapping to the Summary & Transcript columns
-    for col in ["B", "C"]:  # Column B = Summary, Column C = Transcript
+    for col in ["B", "C", "D"]:
         for cell in sheet[col]:
             cell.alignment = Alignment(wrap_text=True)
     
@@ -199,4 +200,5 @@ if __name__ == "__main__":
     end_date = sys.argv[2]
     print(f"Script started with start_date: {start_date} and end_date: {end_date}")
     main_function(start_date, end_date)
+
 
