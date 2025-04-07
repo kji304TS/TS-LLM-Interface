@@ -160,24 +160,6 @@ def store_conversations_to_xlsx(conversations, file_path):
     workbook.save(file_path)
     print(f"File {file_path} saved successfully.")
 
-def upload_to_drive(file_path):
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("credentials.json")
-    if gauth.credentials is None:
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        gauth.Refresh()
-    else:
-        gauth.Authorize()
-    gauth.SaveCredentialsFile("credentials.json")
-    
-    drive = GoogleDrive(gauth)
-    file = drive.CreateFile({"title": os.path.basename(file_path), "parents": [{"id": GDRIVE_FOLDER_ID}]})
-    file.SetContentFile(file_path)
-    file.Upload()
-    print(f"File {file_path} uploaded successfully to Google Drive.")
-
-
 def standard_result(status: str, message: str, file_url: str = None):
     return {
         "status": status,
