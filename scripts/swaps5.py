@@ -175,7 +175,7 @@ def main_function(start_date, end_date):
     swaps_conversations = filter_conversations_by_swaps(conversations)
     print(f"Swaps Conversations Found: {len(swaps_conversations)}")
 
-    if bridge_conversations:
+    if swaps_conversations:
         file_path = f'swaps_conversations_{start_date}_to_{end_date}.xlsx'
         store_conversations_to_xlsx(swaps_conversations, file_path)
         
