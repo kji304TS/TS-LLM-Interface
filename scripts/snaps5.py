@@ -6,8 +6,7 @@ import sys
 from dotenv import load_dotenv
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+from app import upload_file_to_drive
 
 # Load environment variables
 load_dotenv()
@@ -151,37 +150,33 @@ def store_conversations_to_xlsx(conversations, file_path):
     workbook.save(file_path)
     print(f"File {file_path} saved successfully.")
 
-def upload_to_drive(file_path):
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("credentials.json")
-    if gauth.credentials is None:
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        gauth.Refresh()
-    else:
-        gauth.Authorize()
-    gauth.SaveCredentialsFile("credentials.json")
-    
-    drive = GoogleDrive(gauth)
-    file = drive.CreateFile({"title": os.path.basename(file_path), "parents": [{"id": GDRIVE_FOLDER_ID}]})
-    file.SetContentFile(file_path)
-    file.Upload()
-    print(f"File {file_path} uploaded successfully to Google Drive.")
+def standard_result(status: str, message: str, file_url: str = None):
+    return {
+        "status": status,
+        "message": message,
+        "file": file_url if file_url else None
+    }
 
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
     if not conversations:
-        print("No conversations found for the provided timeframe.")
-        return
+        return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
+
     snaps_conversations = filter_conversations_by_snaps(conversations)
     print(f"Snaps Conversations Found: {len(snaps_conversations)}")
+
     if snaps_conversations:
         file_path = f'snaps_conversations_{start_date}_to_{end_date}.xlsx'
         store_conversations_to_xlsx(snaps_conversations, file_path)
-        upload_to_drive(file_path)
-        print(f"File {file_path} uploaded successfully.")
+        
+        file_url = upload_file_to_drive(file_path)
+        print(f"File uploaded to Google Drive: {file_url}")
+
+        # ✅ Only show simple message in output
+        return standard_result("success", "✅ File uploaded: Complete")
+
     else:
-        print("No snaps-related conversations found.")
+        return standard_result("no_data", "🤷 No Snaps-related conversations found.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
