@@ -6,8 +6,7 @@ import sys
 from dotenv import load_dotenv
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+from app import upload_file_to_drive
 
 # Load environment variables
 load_dotenv()
@@ -208,33 +207,33 @@ def store_conversations_to_xlsx(conversations, file_path):
     print(f"File {file_path} saved successfully.")
 
 
-def upload_to_drive(file_path):
-    gauth = GoogleAuth()
-    gauth.LoadCredentialsFile("credentials.json")
-    if gauth.credentials is None:
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        gauth.Refresh()
-    else:
-        gauth.Authorize()
-    gauth.SaveCredentialsFile("credentials.json")
-    
-    drive = GoogleDrive(gauth)
-    file = drive.CreateFile({"title": os.path.basename(file_path), "parents": [{"id": GDRIVE_FOLDER_ID}]})
-    file.SetContentFile(file_path)
-    file.Upload()
-    print(f"File {file_path} uploaded successfully to Google Drive.")
+def standard_result(status: str, message: str, file_url: str = None):
+    return {
+        "status": status,
+        "message": message,
+        "file": file_url if file_url else None
+    }
 
 def main_function(start_date, end_date):
     conversations = search_conversations(start_date, end_date)
-    if conversations:
-        staking_conversations = filter_conversations_by_staking(conversations)
-        print(f"Staking Conversations: {len(staking_conversations)}")
+    if not conversations:
+        return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
+
+    staking_conversations = filter_conversations_by_staking(conversations)
+    print(f"Staking Conversations Found: {len(staking_conversations)}")
+
+    if staking_conversations:
         file_path = f'staking_conversations_{start_date}_to_{end_date}.xlsx'
         store_conversations_to_xlsx(staking_conversations, file_path)
-        upload_to_drive(file_path)
+        
+        file_url = upload_file_to_drive(file_path)
+        print(f"File uploaded to Google Drive: {file_url}")
+
+        # ✅ Only show simple message in output
+        return standard_result("success", "✅ File uploaded: Complete")
+
     else:
-        print("No conversations found for provided timeframe")
+        return standard_result("no_data", "🤷 No Staking-related conversations found.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -244,4 +243,6 @@ if __name__ == "__main__":
     end_date = sys.argv[2]
     print(f"Script started with start_date: {start_date} and end_date: {end_date}")
     main_function(start_date, end_date)
+
+
 
