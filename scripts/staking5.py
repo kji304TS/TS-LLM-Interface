@@ -151,60 +151,70 @@ def filter_conversations_by_staking(conversations):
     return filtered_conversations
 
 def store_conversations_to_xlsx(conversations, file_path):
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = "Conversations"
+    try:
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "Conversations"
 
-    # ✅ Define the headers (including new subcategories for Staking)
-    headers = [
-        'conversation_id', 'summary', 'transcript', 
-        'Staking Feature', 'Validator Staking Issue', 'Pooled Staking Issue', 
-        'Liquid Staking Issue', 'Third Party Staking', 'Bug ID', 
-        'Refund amount (USD)', 'Refund Provided', 'Withdrawals', 
-        'Managing Staked Tokens', 'User Training', 'Failed Transaction',
-        'Liquid Staking Provider', 'Staking Token Type', 'Staking Platform'
-    ]
-    sheet.append(headers)
+        # ✅ Headers
+        headers = [
+            'conversation_id', 'summary', 'transcript', 
+            'Staking Feature', 'Validator Staking Issue', 'Pooled Staking Issue', 
+            'Liquid Staking Issue', 'Third Party Staking', 'Bug ID', 
+            'Refund amount (USD)', 'Refund Provided', 'Withdrawals', 
+            'Managing Staked Tokens', 'User Training', 'Failed Transaction',
+            'Liquid Staking Provider', 'Staking Token Type', 'Staking Platform'
+        ]
+        sheet.append(headers)
 
-    for conversation in conversations:
-        conversation_id = conversation['id']
-        summary = remove_html_tags(get_conversation_summary(conversation))
-        transcript = remove_html_tags(get_conversation_transcript(conversation))
+        for conversation in conversations:
+            try:
+                conversation_id = conversation.get('id', 'N/A')
+                summary = remove_html_tags(get_conversation_summary(conversation))
+                transcript = remove_html_tags(get_conversation_transcript(conversation))
 
-        # ✅ Extract new staking categories & subcategories
-        staking_feature = conversation.get('Staking Feature', 'None')
-        validator_staking_issue = conversation.get('Validator Staking Issue', 'None')
-        pooled_staking_issue = conversation.get('Pooled Staking Issue', 'None')
-        liquid_staking_issue = conversation.get('Liquid Staking Issue', 'None')
-        third_party_staking = conversation.get('Third Party Staking', 'None')
-        bug_id = conversation.get('Bug ID', 'None')
-        refund_amount = conversation.get('Refund amount (USD)', 'None')
-        refund_provided = conversation.get('Refund Provided', 'None')
-        withdrawals = conversation.get('Withdrawals', 'None')
-        managing_staked_tokens = conversation.get('Managing Staked Tokens', 'None')
-        user_training = conversation.get('User Training', 'None')
-        failed_transaction = conversation.get('Failed Transaction', 'None')
-        liquid_staking_provider = conversation.get('Liquid Staking Provider', 'None')
-        staking_token_type = conversation.get('Staking Token Type', 'None')
-        staking_platform = conversation.get('Staking Platform', 'None')
+                # Extract attributes with fallback
+                def safe_get(key):
+                    return conversation.get(key, 'None')
 
-        # ✅ Append the data as a row in the sheet
-        sheet.append([
-            conversation_id, summary, transcript, 
-            staking_feature, validator_staking_issue, pooled_staking_issue, 
-            liquid_staking_issue, third_party_staking, bug_id, 
-            refund_amount, refund_provided, withdrawals, 
-            managing_staked_tokens, user_training, failed_transaction,
-            liquid_staking_provider, staking_token_type, staking_platform
-        ])
+                row = [
+                    conversation_id, summary, transcript,
+                    safe_get('Staking Feature'),
+                    safe_get('Validator Staking Issue'),
+                    safe_get('Pooled Staking Issue'),
+                    safe_get('Liquid Staking Issue'),
+                    safe_get('Third Party Staking'),
+                    safe_get('Bug ID'),
+                    safe_get('Refund amount (USD)'),
+                    safe_get('Refund Provided'),
+                    safe_get('Withdrawals'),
+                    safe_get('Managing Staked Tokens'),
+                    safe_get('User Training'),
+                    safe_get('Failed Transaction'),
+                    safe_get('Liquid Staking Provider'),
+                    safe_get('Staking Token Type'),
+                    safe_get('Staking Platform')
+                ]
+                sheet.append(row)
 
-    # ✅ Apply text wrapping for better readability
-    for col in ["B", "C"]:  # Column B = Summary, Column C = Transcript
-        for cell in sheet[col]:
-            cell.alignment = Alignment(wrap_text=True)
+            except Exception as row_err:
+                print(f"⚠️ Skipped a row due to error: {row_err}")
 
-    workbook.save(file_path)
-    print(f"File {file_path} saved successfully.")
+        # ✅ Enable text wrapping for summary and transcript columns
+        for col_letter in ["B", "C"]:  # Columns B and C
+            for cell in sheet[col_letter]:
+                cell.alignment = Alignment(wrap_text=True)
+
+        # ✅ Save to disk
+        print(f"💾 Saving Excel to: {file_path}")
+        workbook.save(file_path)
+        print("✅ Excel file saved successfully.")
+
+    except Exception as e:
+        print("❌ Error while writing Excel file:", str(e))
+        import traceback
+        traceback.print_exc()
+        raise  # Re-raise so main_function can handle it
 
 
 def standard_result(status: str, message: str, file_url: str = None):
@@ -215,28 +225,36 @@ def standard_result(status: str, message: str, file_url: str = None):
     }
 
 def main_function(start_date, end_date):
-    conversations = search_conversations(start_date, end_date)
-    if not conversations:
-        return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
+    try:
+        print(f"🔍 Starting search: {start_date} → {end_date}")
+        conversations = search_conversations(start_date, end_date)
+        print(f"📦 Total conversations: {len(conversations)}")
 
-    staking_conversations = filter_conversations_by_staking(conversations)
-    print(f"Staking Conversations Found: {len(staking_conversations)}")
+        if not conversations:
+            return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
 
-    if staking_conversations:
-        file_path = f'staking_conversations_{start_date}_to_{end_date}.xlsx'
-        
-        try:
-            store_conversations_to_xlsx(staking_conversations, file_path)
-            print(f"✅ File saved locally: {file_path}")
-        except Exception as e:
-            print("❌ Failed to save Excel file:", str(e))
-            return standard_result("error", "❌ Failed to save Excel file.")
+        staking_conversations = filter_conversations_by_staking(conversations)
+        print(f"🔎 Staking-related conversations: {len(staking_conversations)}")
 
-        # Since upload is removed, just return local filename for debugging
-        return standard_result("success", "✅ File created successfully", file_path)
+        if staking_conversations:
+            file_path = f'staking_conversations_{start_date}_to_{end_date}.xlsx'
+            try:
+                store_conversations_to_xlsx(staking_conversations, file_path)
+                print(f"✅ Excel file created at {file_path}")
+            except Exception as e:
+                print("❌ Failed to save Excel:", str(e))
+                return standard_result("error", "Failed to save Excel file.")
 
-    else:
-        return standard_result("no_data", "🤷 No Staking-related conversations found.")
+            return standard_result("success", "✅ File created successfully", file_path)
+        else:
+            return standard_result("no_data", "🤷 No staking-related conversations found.")
+
+    except Exception as e:
+        print("❌ Unhandled error in main_function:", str(e))
+        import traceback
+        traceback.print_exc()
+        return standard_result("error", "Unhandled error in main_function", str(e))
+
 
 
 if __name__ == "__main__":
