@@ -224,16 +224,20 @@ def main_function(start_date, end_date):
 
     if staking_conversations:
         file_path = f'staking_conversations_{start_date}_to_{end_date}.xlsx'
-        store_conversations_to_xlsx(staking_conversations, file_path)
         
-        file_url = upload_file_to_drive(file_path)
-        print(f"File uploaded to Google Drive: {file_url}")
+        try:
+            store_conversations_to_xlsx(staking_conversations, file_path)
+            print(f"✅ File saved locally: {file_path}")
+        except Exception as e:
+            print("❌ Failed to save Excel file:", str(e))
+            return standard_result("error", "❌ Failed to save Excel file.")
 
-        # ✅ Only show simple message in output
-        return standard_result("success", "✅ File uploaded: Complete")
+        # Since upload is removed, just return local filename for debugging
+        return standard_result("success", "✅ File created successfully", file_path)
 
     else:
         return standard_result("no_data", "🤷 No Staking-related conversations found.")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
