@@ -238,22 +238,23 @@ def main_function(start_date, end_date):
 
         if staking_conversations:
             file_path = f'staking_conversations_{start_date}_to_{end_date}.xlsx'
-            try:
-                store_conversations_to_xlsx(staking_conversations, file_path)
-                print(f"✅ Excel file created at {file_path}")
-            except Exception as e:
-                print("❌ Failed to save Excel:", str(e))
-                return standard_result("error", "Failed to save Excel file.")
 
-            return standard_result("success", "✅ File created successfully", file_path)
-        else:
-            return standard_result("no_data", "🤷 No staking-related conversations found.")
-
+    try:
+        store_conversations_to_xlsx(staking_conversations, file_path)
+        print(f"✅ Excel saved locally: {file_path}")
     except Exception as e:
-        print("❌ Unhandled error in main_function:", str(e))
-        import traceback
-        traceback.print_exc()
-        return standard_result("error", "Unhandled error in main_function", str(e))
+        print("❌ Failed to save Excel file:", str(e))
+        return standard_result("error", "❌ Failed to save Excel file.")
+
+    # ✅ Upload to Google Drive
+    try:
+        file_url = upload_file_to_drive(file_path)
+        print(f"✅ File uploaded to Google Drive: {file_url}")
+        return standard_result("success", "✅ File uploaded: Complete", file_url)
+    except Exception as e:
+        print("⚠️ Upload failed:", str(e))
+        return standard_result("success", "✅ File created, but upload to Drive failed", file_path)
+
 
 
 
