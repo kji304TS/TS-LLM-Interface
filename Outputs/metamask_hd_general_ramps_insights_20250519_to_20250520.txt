@@ -1,0 +1,69 @@
+🚀 **Analysis for MetaMask_HD_General_Ramps**
+
+==================================================
+
+🔹 **Most Frequent Issue (AI - usage):**
+Talk to a person (Count: 4)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Talk to a person                   4         100.00%
+
+🔹 **Context for Keywords (from summaries)**
+Common themes based on extracted keywords include:
+
+- "**Question**
+The **customer** contacted us to **speak** with a **human** **agent**.Summary• **User** **wants** to **speak** with a **human** **agent**
+• **Agent** asks for more **information** to connect **user** to the right **person**
+• **Agent** asks for **MetaMask** app version, operating system, network, and public address
+• **User** is transferred to an **agent** and will be contacted soon
+• **Agent** confirms **user** is connected to an **agent**."
+- "**Question**
+The **customer** **wants** to talk to a **person** for support regarding their **MetaMask** app.Summary• Main support channels include chat, email, and community platform
+• **MetaMask** does not have a phone number for support and will never ask for Secret Recovery Phrase
+• **Customer** **wants** to talk to a **person**
+• **Agent** will reach out shortly after gathering necessary **information**
+• **Information** needed: **MetaMask** app version, operating system, network, and public address starting with 0x"
+- "**Question**
+The **customer** needs to **speak** to a **human** **agent** for assistance with **MetaMask**.Summary• **User** needs to **speak** to a **human** **agent** for assistance with **MetaMask**.
+• Bot offers to connect **user** with a **human** **agent** and asks for more **information**.
+• **User** confirms and is asked to select relevant **MetaMask** app, version, operating system, and network.
+• **User** is asked to share their **MetaMask** public address.
+• **User** is transferred to a **human** **agent** for further assistance."
+
+
+🔹 **Sentiment Analysis Results**
+Source Text for Sentiment: Summary (from summaries)
+Average Sentiment Polarity: 0.09 (Range: -1 Negative to +1 Positive)
+Average Sentiment Subjectivity: 0.29 (Range: 0 Objective to 1 Subjective)
+
+Sentiment Distribution:
+  - Positive (> 0.05): 3 (75.0%)
+  - Neutral (-0.05 to 0.05): 1 (25.0%)
+  - Negative (< -0.05): 0 (0.0%)
+
+Examples of Most Positive Conversations (up to 2):
+  - Polarity: 0.16 | Text: "Question The customer contacted us to speak with a human agent.Summary• User wants to speak with a human agent • Agent asks for more information to co..."
+  - Polarity: 0.11 | Text: "Question The customer needs to speak to a human agent for assistance with MetaMask.Summary• User needs to speak to a human agent for assistance with M..."
+
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords ? (from summaries)**
+- agent
+- metamask
+- user
+- customer
+- human
+- wants
+- speak
+- question
+- information
+- person
+
+**What sentiment trends can be observed from the summaries? (from summaries)**
+  Overall average polarity is 0.09.
+  Distribution: Positive (75.0%), Neutral (25.0%), Negative (0.0%).

@@ -1,0 +1,75 @@
+🚀 **Analysis for MetaMask_HD_UST_Security**
+
+==================================================
+
+🔹 **Most Frequent Issue (AI - usage):**
+Talk to a person (Count: 3)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Talk to a person                   3         75.00%
+Direct routing                     1         25.00%
+
+🔹 **Context for Keywords (from summaries)**
+Common themes based on extracted keywords include:
+
+- "Question
+The **customer** contacted us because **their** BNB transfer appeared in the activity screen but not in **their** **account** **balance**.Summary• BNB transfer appeared in activity screen but not in **account** **balance**
+• Confirmed on BscScan
+• Steps to resolve display issue: check network, delete and re-add network, update **MetaMask**, manually add BNB token
+• **Customer** unable to do steps, requested to speak with a real person
+• **Agent** connected to assist with issue."
+- "Question
+The **customer**'s wallet was hacked and **they** need assistance securing **their** **account**.Summary• **User**'s wallet was hacked last night.
+• **User** needs assistance securing **their** **account**.
+• **User** is being connected to a **User** Safety support **agent**.
+• **Agent** will need more information such as **MetaMask** app version, operating system, network, and public address.
+• **Agent** will reach out to the **user** shortly."
+- "Question
+The **customer** contacted us because **they** had a **transaction** in **their** **MetaMask** **account** that **they** didn't understand.Summary• **Customer** has a **transaction** in **their** **MetaMask** **account** that **they** don't understand.
+• **Bot** suggests ways to examine the **transaction** and check for unauthorized activity.
+• **Bot** explains that the **transaction** is likely a spam token and advises not to interact with it.
+• **Bot** explains how to activate security alerts and check for compromised **account**.
+• **Bot** provides instructions on how to view and manage notifications for site access requests."
+- "Question
+The **customer** contacted us because **they** purchased Ethereum using Transak but cannot see the amount in **their** **MetaMask** **balance** and suspect a "sweeper **bot**" may have stolen **their** money.Summary• **Customer** purchased $105 worth of Ethereum using Transak and it shows as complete.
+• **Customer** is unable to see the purchased amount in **their** **MetaMask** **balance**.
+• **Customer** suspects a "sweeper **bot**" may have stolen **their** money.
+• Teammate confirms the correct **balance** and provides **transaction** links for verification.
+• **Customer** is concerned about the security of **their** wallet and the possibility of further theft."
+
+
+🔹 **Sentiment Analysis Results**
+Source Text for Sentiment: Summary (from summaries)
+Average Sentiment Polarity: 0.03 (Range: -1 Negative to +1 Positive)
+Average Sentiment Subjectivity: 0.57 (Range: 0 Objective to 1 Subjective)
+
+Sentiment Distribution:
+  - Positive (> 0.05): 1 (25.0%)
+  - Neutral (-0.05 to 0.05): 3 (75.0%)
+  - Negative (< -0.05): 0 (0.0%)
+
+Examples of Most Positive Conversations (up to 2):
+  - Polarity: 0.10 | Text: "Question The customer's wallet was hacked and they need assistance securing their account.Summary• User's wallet was hacked last night. • User needs a..."
+
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords ? (from summaries)**
+- their
+- customer
+- bot
+- account
+- metamask
+- transaction
+- they
+- agent
+- balance
+- user
+
+**What sentiment trends can be observed from the summaries? (from summaries)**
+  Overall average polarity is 0.03.
+  Distribution: Positive (25.0%), Neutral (75.0%), Negative (0.0%).

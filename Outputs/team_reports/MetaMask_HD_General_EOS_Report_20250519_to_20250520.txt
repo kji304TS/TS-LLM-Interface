@@ -1,0 +1,17 @@
+Team End of Shift Report: MetaMask HD General (20250519 to 20250520)
+====================================================================
+
+Total Conversations for Team: 20
+
+Top Issues/Custom Attributes Reported for Team:
+  1. Buy or Sell - Buy: 4 occurrences
+  2. Wallet issue - User training: 3 occurrences
+  3. Wallet issue - Back-up or restore: 3 occurrences
+  4. Wallet issue - Balance issue: 2 occurrences
+  5. Buy issue - Error in Buy Flow (Vendor): 2 occurrences
+---
+
+Top 5 Keywords from Summaries for Team:
+
+Sentiment analysis not performed for team (no suitable text source found). 
+---

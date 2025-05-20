@@ -1,0 +1,64 @@
+🚀 **Analysis for MetaMask_HD_General_Snaps**
+
+==================================================
+
+🔹 **Most Frequent Issue (AI - usage):**
+Talk to a person (Count: 1)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Talk to a person                   1         100.00%
+
+🔹 **Context for Keywords (from summaries)**
+Common themes based on extracted keywords include:
+
+- "Question
+The customer contacted us for **assistance** with a **recent** **transaction** on **MetaMask**.Summary• Ways to help with **recent** **transaction**: 
+  - Check '**Activity**' tab in **MetaMask** wallet 
+  - Use **MetaMask** **Activity** at **activity**.**metamask**.io 
+  - Tap clock icon in **MetaMask** mobile **app** 
+• Methods provide **transaction** information: 
+  - Timing, addresses involved, token **details** 
+• Additional **assistance** available for specific **details** or issues 
+• To talk to live **agent**: 
+  - **Select** **related** **MetaMask** **app** 
+  - Share version of extension and operating system 
+  - **Select** **related** network 
+  - Share **MetaMask** public address 
+  - Connected to **agent** for further **assistance**"
+
+
+🔹 **Sentiment Analysis Results**
+Source Text for Sentiment: Summary (from summaries)
+Average Sentiment Polarity: 0.06 (Range: -1 Negative to +1 Positive)
+Average Sentiment Subjectivity: 0.32 (Range: 0 Objective to 1 Subjective)
+
+Sentiment Distribution:
+  - Positive (> 0.05): 1 (100.0%)
+  - Neutral (-0.05 to 0.05): 0 (0.0%)
+  - Negative (< -0.05): 0 (0.0%)
+
+Examples of Most Positive Conversations (up to 2):
+  - Polarity: 0.06 | Text: "Question The customer contacted us for assistance with a recent transaction on MetaMask.Summary• Ways to help with recent transaction:    - Check 'Act..."
+
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords ? (from summaries)**
+- metamask
+- assistance
+- transaction
+- details
+- related
+- recent
+- app
+- activity
+- agent
+- select
+
+**What sentiment trends can be observed from the summaries? (from summaries)**
+  Overall average polarity is 0.06.
+  Distribution: Positive (100.0%), Neutral (0.0%), Negative (0.0%).

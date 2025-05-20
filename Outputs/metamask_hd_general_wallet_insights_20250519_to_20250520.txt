@@ -1,0 +1,97 @@
+🚀 **Analysis for MetaMask_HD_General_Wallet**
+
+==================================================
+
+🔹 **Most Frequent Issue (AI - usage):**
+Talk to a person (Count: 13)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Talk to a person                   13        100.00%
+
+🔹 **Context for Keywords (from summaries)**
+Common themes based on extracted keywords include:
+
+- "**Question**
+The **customer** **contacted** us to inquire about the delay in receiving **their** purchased ETH from a Mexican bank transfer.Summary• **Customer** did a transaction from a Mexican bank to ETH on Thursday, but it hasn't arrived yet.
+• Delays in receiving purchased ETH are common, especially with international bank transfers.
+• BANXICO verified the transaction, but it may still take some time to process.
+• **Customer** did not receive any email confirmation.
+• **Customer** needs to talk to someone and provide more information to connect with the right person."
+- "**Question**
+The **customer** **contacted** us because they are having trouble accessing **their** **MetaMask** **wallet** using **their** Secret Recovery Phrase.Summary• **Customer** is having trouble accessing **their** **MetaMask** **wallet** using **their** Secret Recovery Phrase.
+• Teammate suggests checking for correct order, lowercase letters, and no special characters in the phrase.
+• If the phrase is correct, the issue may be with the password and variations can be tried.
+• **Customer**'s email is linked to the account, but it does not help with recovery as **MetaMask** does not store personal information.
+• If NFTs are being traded without consent, it may indicate a compromised **wallet**.
+• Teammate offers to connect **customer** with an **agent** for further **assistance**.
+• **Agent** asks for more information and suggests downloading **MetaMask** extension on a new browser to recover the correct **wallet**.
+• **Agent** reminds **customer** to save **their** Secret Recovery Phrase correctly and not share it with anyone."
+- "**Question**
+The **customer** **contacted** us to recover multiple accounts in **their** **MetaMask** app.Summary• To recover multiple accounts in **MetaMask**, expand the account selector and choose "Add account or hardware **wallet**" and then "Add a new account".
+• If any accounts were imported from a different source, they will need to be reimported using **their** specific private key.
+• To speak with a person, the **customer** will need to provide information about **their** **MetaMask** app, version, operating system, **network**, and public **address**.
+• The **customer** will then be connected with an **agent** who will communicate with them shortly."
+- "**Question**
+The **customer** needs **assistance** from a human **agent** for **their** **MetaMask** app.Summary• User needs **assistance** from a human **agent** for **their** **MetaMask** app.
+• The bot asks for more information, including the app version, operating system, **network**, and public **address**.
+• The bot transfers the user to a human **agent**.
+• The user is now connected to an **agent** who will reach out shortly."
+- "**Question**
+The **customer** **contacted** us because **their** NFT was not visible in **MetaMask**.Summary• Reasons why NFT may not be visible in **MetaMask**: 
+  - NFT autodetect not enabled 
+  - NFT not manually imported 
+  - Incorrect **network** 
+  - Indexing delay 
+  - Display glitch 
+• Steps to resolve the issue: 
+  - Enable NFT autodetect or manually import NFT 
+  - Ensure correct **network** and wait for indexing 
+  - Verify NFT ownership using a block explorer 
+• Option to talk to a person for further **assistance** 
+• Information needed to connect with an **agent**: 
+  - **MetaMask** app version 
+  - Operating system 
+  - **Network** 
+  - **MetaMask** public **address** (starting with 0x)"
+
+
+🔹 **Sentiment Analysis Results**
+Source Text for Sentiment: Summary (from summaries)
+Average Sentiment Polarity: -0.00 (Range: -1 Negative to +1 Positive)
+Average Sentiment Subjectivity: 0.44 (Range: 0 Objective to 1 Subjective)
+
+Sentiment Distribution:
+  - Positive (> 0.05): 4 (30.8%)
+  - Neutral (-0.05 to 0.05): 6 (46.2%)
+  - Negative (< -0.05): 3 (23.1%)
+
+Examples of Most Positive Conversations (up to 2):
+  - Polarity: 0.21 | Text: "Question The customer contacted us because they were having trouble receiving eardrops and getting an error message about gas fees.Summary• Customer i..."
+  - Polarity: 0.11 | Text: "Question The customer contacted us for assistance with connecting their Trezor to MetaMask.Summary• To connect a Trezor to MetaMask, click the account..."
+
+Examples of Most Negative Conversations (up to 2):
+  - Polarity: -0.26 | Text: "Question The customer contacted us for assistance with recovering funds that were sent to the wrong address or network on the blockchain.Summary• Bloc..."
+  - Polarity: -0.10 | Text: "Question The customer contacted us for assistance with adding NXPC tokens to their MetaMask wallet.Summary• Customer is having trouble seeing NXPC tok..."
+
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords ? (from summaries)**
+- customer
+- metamask
+- their
+- network
+- address
+- agent
+- wallet
+- question
+- assistance
+- contacted
+
+**What sentiment trends can be observed from the summaries? (from summaries)**
+  Overall average polarity is -0.00.
+  Distribution: Positive (30.8%), Neutral (46.2%), Negative (23.1%).

@@ -1,0 +1,86 @@
+🚀 **Analysis for MetaMask_HD_General_Wallet**
+
+==================================================
+
+🔹 **Most Frequent Issue (AI - usage):**
+Talk to a person (Count: 149)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Talk to a person                   149       91.41%
+Skipped                            8         4.91%
+Direct routing                     6         3.68%
+
+🔹 **Context for Keywords (from summaries)**
+Common themes based on extracted keywords include:
+
+- "**Question**
+The **customer** **contacted** us for **assistance** with **their** **MetaMask** app and needs to provide more information for the right person to assist them.Summary• **Agent** needs more information to connect **customer** with the right person.
+• **Customer** needs to select the **MetaMask** app related to **their** inquiry.
+• **Customer** needs to provide **their** **MetaMask** mobile version, operating system, and **network**.
+• **Customer** needs to share **their** **MetaMask** public **address** starting with 0x.
+• **Customer** will be transferred to an **agent** and will be **contacted** shortly."
+- "**Question**
+The **customer** **contacted** us to solve a 500 error on BNB Smart Chain.Summary• To solve the 500 error on BNB Smart Chain, try connecting to an alternative RPC URL or disabling and re-enabling the **MetaMask** extension.
+• If the issue persists, please provide more information to connect with a suitable representative.
+• Select the **MetaMask** app, version, and operating system related to your inquiry.
+• Share your **MetaMask** public **address**.
+• You are now connected with a representative who will assist you shortly."
+- "**Question**
+The **customer** **contacted** us due to an error with incompatible gas fee structure.Summary• Error occurs due to incompatible gas fee structure
+• Solution: update **MetaMask**, set gas fees manually, try different RPC URL or token amount
+• Request for person-to-person **assistance**
+• Information needed: **MetaMask** app version, operating system, **network**, public **address**
+• **Customer** connected to **agent** for further **assistance**."
+- "**Question**
+The **customer** **contacted** us because they were unable to reconnect to a dapp after removing permissions and wanted **assistance** from a human **agent**.Summary• **User** is frustrated because they cannot reconnect to a dapp after removing permissions.
+• **User** wants to be connected to a human **agent** for **assistance**.
+• Bot asks for more information, such as **MetaMask** app version, operating system, **network**, and public **address**.
+• Bot transfers **user** to a human **agent** for further **assistance**.
+• **User** is now connected to an **agent** who will reach out shortly."
+- "**Question**
+The **customer** needs **assistance** from a human **agent** for **their** **MetaMask** app.Summary• **User** needs **assistance** from a human **agent** for **their** **MetaMask** app.
+• The bot asks for more information, including the app version, operating system, **network**, and public **address**.
+• The bot transfers the **user** to a human **agent**.
+• The **user** is now connected to an **agent** who will reach out shortly."
+
+
+🔹 **Sentiment Analysis Results**
+Source Text for Sentiment: Summary (from summaries)
+Average Sentiment Polarity: 0.06 (Range: -1 Negative to +1 Positive)
+Average Sentiment Subjectivity: 0.39 (Range: 0 Objective to 1 Subjective)
+
+Sentiment Distribution:
+  - Positive (> 0.05): 84 (51.5%)
+  - Neutral (-0.05 to 0.05): 47 (28.8%)
+  - Negative (< -0.05): 32 (19.6%)
+
+Examples of Most Positive Conversations (up to 2):
+  - Polarity: 0.40 | Text: "No summary available..."
+  - Polarity: 0.40 | Text: "No summary available..."
+
+Examples of Most Negative Conversations (up to 2):
+  - Polarity: -0.50 | Text: "Question The customer contacted us because they were unable to find the NXPC token on the Avalanche chain in MetaMask.Summary• NXPC token cannot be fo..."
+  - Polarity: -0.50 | Text: "Question The customer contacted us for assistance with a failed ETH unstaking process.Summary• ETHのアンステーキングが失敗する場合、以下の手順を試してみてください：   1. MetaMaskを最新バー..."
+
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords ? (from summaries)**
+- customer
+- metamask
+- user
+- agent
+- question
+- their
+- contacted
+- network
+- assistance
+- address
+
+**What sentiment trends can be observed from the summaries? (from summaries)**
+  Overall average polarity is 0.06.
+  Distribution: Positive (51.5%), Neutral (28.8%), Negative (19.6%).

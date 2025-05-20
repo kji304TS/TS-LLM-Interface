@@ -1,4 +1,6 @@
+app
 fastapi
+flask
 uvicorn
 pydrive
 pydantic
@@ -9,4 +11,8 @@ google-api-python-client
 google-auth
 google-auth-httplib2
 google-auth-oauthlib
+slack_sdk
+textblob==0.17.1
+APScheduler
+pytz
 

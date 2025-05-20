@@ -1,0 +1,71 @@
+🚀 **Analysis for MetaMask_HD_General_Swaps**
+
+==================================================
+
+🔹 **Most Frequent Issue (AI - usage):**
+Talk to a person (Count: 5)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Talk to a person                   5         100.00%
+
+🔹 **Context for Keywords (from summaries)**
+Common themes based on extracted keywords include:
+
+- "**Question**
+The **customer** contacted us **due** to receiving a "Quotes not available" **error** while using **MetaMask** Swaps.Summary• "Quotes not available" **error** occurs **due** to insufficient liquidity for the **token** being swapped.
+• Steps to resolve the **error**: **check** **token** liquidity, adjust slippage and **token** amount, tap "Try again" to refresh quotes.
+• **MetaMask** Swaps requires sufficient liquidity (usually a few thousand dollars' worth) to avoid high price impact.
+• Swapped tokens should be received soon after completing a swap in **MetaMask**.
+• To connect with a human live chat agent, select the relevant **MetaMask** app, provide version and operating system, select the related network, and share **MetaMask** public address starting with 0x."
+- "**Question**
+The **customer** contacted us for **assistance** with a failed warp **transaction** on msu.io dapp.Summary• **Customer**'s warp **transaction** is failing on msu.io dapp **due** to an **error** in their smart contract.
+• Teammate recommends contacting msu.io for support.
+• Teammate clarifies that **MetaMask** does not have control over dapp interactions.
+• **Customer**'s friends are also experiencing the same **issue**.
+• Teammate offers further **assistance** and directs **customer** to **MetaMask** Knowledge Base."
+- "**Question**
+The **customer** contacted us **due** to encountering an **error** while claiming Bone **token**.Summary• User encountered an **error** while claiming Bone **token**.
+• The **error** is **due** to a mismatch in **transaction** parameters, specifically using both old and new gas fee structures.
+• Steps to resolve the **issue**: update **MetaMask**, clear browser cache, **check** dApp implementation, and contact support if **issue** persists.
+• User requested to talk to a person and was connected to an agent for further **assistance**.
+• Agent will reach out to the user shortly."
+
+
+🔹 **Sentiment Analysis Results**
+Source Text for Sentiment: Summary (from summaries)
+Average Sentiment Polarity: 0.05 (Range: -1 Negative to +1 Positive)
+Average Sentiment Subjectivity: 0.38 (Range: 0 Objective to 1 Subjective)
+
+Sentiment Distribution:
+  - Positive (> 0.05): 1 (20.0%)
+  - Neutral (-0.05 to 0.05): 3 (60.0%)
+  - Negative (< -0.05): 1 (20.0%)
+
+Examples of Most Positive Conversations (up to 2):
+  - Polarity: 0.40 | Text: "No summary available..."
+
+Examples of Most Negative Conversations (up to 2):
+  - Polarity: -0.16 | Text: "Question The customer contacted us for assistance with a failed warp transaction on msu.io dapp.Summary• Customer's warp transaction is failing on msu..."
+
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords ? (from summaries)**
+- metamask
+- error
+- transaction
+- customer
+- due
+- assistance
+- token
+- check
+- question
+- issue
+
+**What sentiment trends can be observed from the summaries? (from summaries)**
+  Overall average polarity is 0.05.
+  Distribution: Positive (20.0%), Neutral (60.0%), Negative (20.0%).

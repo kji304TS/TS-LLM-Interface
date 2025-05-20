@@ -1,0 +1,56 @@
+🚀 **Analysis for MetaMask_HD_General_Bridges**
+
+==================================================
+
+🔹 **Most Frequent Issue (AI - usage):**
+Skipped (Count: 1)
+
+
+🔹 **Full Breakdown of Issues:**
+
+Issue                              Count     Percentage
+-------------------------------------------------------
+Skipped                            1         100.00%
+
+🔹 **Context for Keywords (from summaries)**
+Common themes based on extracted keywords include:
+
+- "**Question**
+The customer contacted us for **assistance** with their **MetaMask** **app**.Summary• Conversation with **agent** was closed
+• Need more information to connect with right person
+• **MetaMask** **app** version, operating system, network, and public **address** **required**
+• **Transferred** to **agent** for **assistance**
+• **Agent** will **reach** **out** shortly"
+
+
+🔹 **Sentiment Analysis Results**
+Source Text for Sentiment: Summary (from summaries)
+Average Sentiment Polarity: 0.14 (Range: -1 Negative to +1 Positive)
+Average Sentiment Subjectivity: 0.30 (Range: 0 Objective to 1 Subjective)
+
+Sentiment Distribution:
+  - Positive (> 0.05): 1 (100.0%)
+  - Neutral (-0.05 to 0.05): 0 (0.0%)
+  - Negative (< -0.05): 0 (0.0%)
+
+Examples of Most Positive Conversations (up to 2):
+  - Polarity: 0.14 | Text: "Question The customer contacted us for assistance with their MetaMask app.Summary• Conversation with agent was closed • Need more information to conne..."
+
+
+🔹 **Predefined Prompt Analysis:**
+
+**What are the top 10 most important keywords ? (from summaries)**
+- agent
+- assistance
+- metamask
+- question
+- app
+- out
+- reach
+- transferred
+- required
+- address
+
+**What sentiment trends can be observed from the summaries? (from summaries)**
+  Overall average polarity is 0.14.
+  Distribution: Positive (100.0%), Neutral (0.0%), Negative (0.0%).
