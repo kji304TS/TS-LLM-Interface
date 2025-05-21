@@ -8,12 +8,15 @@ body {
   margin: 0;
   text-align: center;
 }
+
+
 span {
   margin-top: 10px;
   font-size: 2.25em;
   color: black;
   font-weight: bold;
   text-align: center;
+
   text-shadow:
     -2px -2px 5px violet,
     /* Top-left */
@@ -24,12 +27,15 @@ span {
     2px 2px 5px violet,
     /* Bottom-right */
     0px 0px 5px violet;
+
   /* Glowing effect */
 }
+
 img {
   align-items: center;
   /* Centers items horizontally */
   width: 200px;
+
   margin-right: 5px;
   border-radius: 20px;
   box-shadow:
@@ -37,13 +43,19 @@ img {
     /* soft glow */
     0 0 10px rgba(238, 130, 238, 0.6);
 }
+
 .banner {
   margin-top: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
+
 }
+
+
+
 /* Banner content styling */
+
 /* Form container styling */
 form {
   margin-top: 30px;
@@ -54,16 +66,23 @@ form {
   padding-right: 50px;
   display: inline-block;
   text-align: left;
+
+
 }
+
 select option[disabled] {
   color: #c20f0f;
   /* Adjust color for faded appearance */
 }
+
 label {
   color: violet;
   font-weight: bold;
   font-size: 1.25em;
+
 }
+
+
 /* Styling inputs and select boxes */
 input[type="date"],
 select {
@@ -76,7 +95,9 @@ select {
   box-shadow: 0 0 8px violet;
   margin-top: 5px;
   font-size: 1.25em;
+
 }
+
 /* Button styling */
 button {
   background-color: violet;
@@ -89,15 +110,19 @@ button {
   font-weight: bold;
   font-size: 1.25em;
 }
+
 button:hover {
   background-color: purple;
 }
+
 .clear {
   margin-left: 150px;
   background-color: #1e1e1e;
   color: white;
   box-shadow: 0 0 5px violet;
+
 }
+
 input[type="date"] {
   background-color: #222;
   color: white;
@@ -107,12 +132,14 @@ input[type="date"] {
   font-size: 1.25em;
   outline: none;
 }
+
 /* Style the calendar dropdown */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
   /* Makes the calendar icon white */
   cursor: pointer;
 }
+
 /* For Firefox */
 input[type="date"]::-moz-calendar-picker-indicator {
   filter: invert(1);
