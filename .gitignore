@@ -6,4 +6,5 @@
 "output_files/" 
 "client_secrets.json" 
 "credentials.json" 
+.env    
 

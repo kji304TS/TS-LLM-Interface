@@ -93,7 +93,7 @@ This server provides an API endpoint to trigger the conversation processing scri
             "script_name": "LLM5.py", // Or other scripts in the 'scripts/' directory
             "start_date": "YYYY-MM-DD HH:MM", // e.g., "2023-10-01 00:00"
             "end_date": "YYYY-MM-DD HH:MM",   // e.g., "2023-10-07 23:59"
-            "upload_to_gdrive": true          // boolean, true to upload, false otherwise
+            "upload_to_gdrive": false          // boolean, true to upload, false otherwise
         }
         ```
     -   This will execute the `main_function` within the specified script.

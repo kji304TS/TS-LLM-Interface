@@ -153,8 +153,8 @@ def standard_result(status: str, message: str, file_url: str = None):
         "file": file_url if file_url else None
     }
 
-def main_function(start_date, end_date):
-    conversations = search_conversations(start_date, end_date)
+def main_function(start_date_str, end_date_str, upload_to_gdrive=False):
+    conversations = search_conversations(start_date_str, end_date_str)
     if not conversations:
         return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
 
@@ -162,11 +162,12 @@ def main_function(start_date, end_date):
     print(f"SDK Conversations Found: {len(sdk_conversations)}")
 
     if sdk_conversations:
-        file_path = f'sdk_conversations_{start_date}_to_{end_date}.xlsx'
+        file_path = f'sdk_conversations_{start_date_str}_to_{end_date_str}.xlsx'
         store_conversations_to_xlsx(sdk_conversations, file_path)
         
-        file_url = upload_file_to_drive(file_path)
-        print(f"File uploaded to Google Drive: {file_url}")
+        if upload_to_gdrive:
+            file_url = upload_file_to_drive(file_path)
+            print(f"File uploaded to Google Drive: {file_url}")
 
         # ✅ Only show simple message in output
         return standard_result("success", "✅ File uploaded: Complete")

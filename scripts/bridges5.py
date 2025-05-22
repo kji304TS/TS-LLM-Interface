@@ -71,7 +71,7 @@ def search_conversations(start_date_str, end_date_str):
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").timestamp()
 
     except ValueError as e:
-        print(f"Error parsing dates: {e}")
+        print(f"Error parsing dates for search_conversations in bridges5.py: {e}")
         return []
 
     url = "https://api.intercom.io/conversations/search"
@@ -125,12 +125,14 @@ def search_conversations(start_date_str, end_date_str):
 def filter_conversations_by_bridge(conversations):
     """Filters conversations for the MetaMask Wallet area and retrieves full conversation details"""
     filtered_conversations = []
+    expected_area_value = "bridges"
+    print(f"bridge5.py: Filtering for 'MetaMask area' (case-insensitive) = '{expected_area_value}'")
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
-        print(f"Custom Attributes: {attributes}")
-
-        # Check if the conversation belongs to "Wallet"
-        if attributes.get('MetaMask area', '').strip().lower() == 'bridges':
+        meta_mask_area_val = attributes.get('MetaMask area', '').strip().lower()
+        # print(f"bridge5.py: Checking conversation {conversation.get('id')}, MetaMask area raw: '{attributes.get('MetaMask area')}', processed: '{meta_mask_area_val}'") # Verbose Debug
+        
+        if meta_mask_area_val == expected_area_value:
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
                 full_conversation['Bridge issue'] = attributes.get('Bridge issue', 'None')
@@ -172,8 +174,8 @@ def standard_result(status: str, message: str, file_url: str = None):
         "file": file_url if file_url else None
     }
 
-def main_function(start_date, end_date):
-    conversations = search_conversations(start_date, end_date)
+def main_function(start_date_str, end_date_str, upload_to_gdrive=False):
+    conversations = search_conversations(start_date_str, end_date_str)
     if not conversations:
         return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
 
@@ -181,11 +183,12 @@ def main_function(start_date, end_date):
     print(f"Bridge Conversations Found: {len(bridge_conversations)}")
 
     if bridge_conversations:
-        file_path = f'bridge_conversations_{start_date}_to_{end_date}.xlsx'
+        file_path = f'bridge_conversations_{start_date_str}_to_{end_date_str}.xlsx'
         store_conversations_to_xlsx(bridge_conversations, file_path)
         
-        file_url = upload_file_to_drive(file_path)
-        print(f"File uploaded to Google Drive: {file_url}")
+        if upload_to_gdrive:
+            file_url = upload_file_to_drive(file_path)
+            print(f"File uploaded to Google Drive: {file_url}")
 
         # ✅ Only show simple message in output
         return standard_result("success", "✅ File uploaded: Complete")

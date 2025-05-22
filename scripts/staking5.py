@@ -224,10 +224,10 @@ def standard_result(status: str, message: str, file_url: str = None):
         "file": file_url if file_url else None
     }
 
-def main_function(start_date, end_date):
+def main_function(start_date_str, end_date_str, upload_to_gdrive=False):
     try:
-        print(f"🔍 Starting search: {start_date} → {end_date}")
-        conversations = search_conversations(start_date, end_date)
+        print(f"🔍 Starting search: {start_date_str} → {end_date_str}")
+        conversations = search_conversations(start_date_str, end_date_str)
         print(f"📦 Total conversations: {len(conversations)}")
 
         if not conversations:
@@ -237,7 +237,7 @@ def main_function(start_date, end_date):
         print(f"🔎 Staking-related conversations: {len(staking_conversations)}")
 
         if staking_conversations:
-            file_path = f'staking_conversations_{start_date}_to_{end_date}.xlsx'
+            file_path = f'staking_conversations_{start_date_str}_to_{end_date_str}.xlsx'
 
             try:
                 store_conversations_to_xlsx(staking_conversations, file_path)

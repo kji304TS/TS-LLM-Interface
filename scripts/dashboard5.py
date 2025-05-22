@@ -123,8 +123,8 @@ def filter_conversations_by_dashboard(conversations):
         attributes = conversation.get('custom_attributes', {})
         print(f"Custom Attributes: {attributes}")
 
-        # Updated: Check if the conversation belongs to "Portfolio Dashboard"
-        if attributes.get('MetaMask area', '').strip().lower() == 'portfolio dashboard':
+        # Updated: Check if the conversation belongs to "Dashboard"
+        if attributes.get('MetaMask area', '').strip().lower() == 'dashboard':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
                 full_conversation['Portfolio Dashboard issue'] = attributes.get('Dashboard issue', 'None')
@@ -168,8 +168,8 @@ def standard_result(status: str, message: str, file_url: str = None):
         "file": file_url if file_url else None
     }
 
-def main_function(start_date, end_date):
-    conversations = search_conversations(start_date, end_date)
+def main_function(start_date_str, end_date_str, upload_to_gdrive=False):
+    conversations = search_conversations(start_date_str, end_date_str)
     if not conversations:
         return standard_result("no_data", "⚠️ No conversations found for the selected timeframe.")
 
@@ -177,11 +177,12 @@ def main_function(start_date, end_date):
     print(f"Dashboard Conversations Found: {len(dashboard_conversations)}")
 
     if dashboard_conversations:
-        file_path = f'dashboard_conversations_{start_date}_to_{end_date}.xlsx'
+        file_path = f'dashboard_conversations_{start_date_str}_to_{end_date_str}.xlsx'
         store_conversations_to_xlsx(dashboard_conversations, file_path)
         
-        file_url = upload_file_to_drive(file_path)
-        print(f"File uploaded to Google Drive: {file_url}")
+        if upload_to_gdrive:
+            file_url = upload_file_to_drive(file_path)
+            print(f"File uploaded to Google Drive: {file_url}")
 
         # ✅ Only show simple message in output
         return standard_result("success", "✅ File uploaded: Complete")

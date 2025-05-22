@@ -15,4 +15,3 @@ slack_sdk
 textblob==0.17.1
 APScheduler
 pytz
-

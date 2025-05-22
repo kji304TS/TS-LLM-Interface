@@ -40,14 +40,14 @@ CATEGORY_HEADERS = {
     "Dashboard": ["Dashboard issue"],
     "Ramps": ["Buy or Sell", "Buy issue", "Sell issue"],
     "SDK": [],
-    "Security": [], # Keeping Security as a Product Area, distinct from team
+    "Security": ["scam vector", "Phishing Method", "Funds missing", "Compromise Method"], # Added "Compromise Method"
     "Snaps": ["Snaps Category"],
     "Staking": ["Staking Feature", "Validator Staking Issue", "Pooled Staking Issue", "Liquid Staking Issue", "Third Party Staking", "Bug ID", "Refund amount (USD)", "Refund Provided", "Withdrawals", "Managing Staked Tokens", "User Training", "Failed Transaction", "Liquid Staking Provider", "Staking Token Type", "Staking Platform"],
     "Swaps": ["Swaps issue"],
     "Wallet": ["Wallet issue"],
     "Wallet API": [],
-    "Portfolio": [], # New Product Area
-    "Solana": []     # New Product Area
+    "Portfolio": [], 
+    "Solana": []     
 }
 
 OUTPUT_DIR = "output_files"
@@ -67,42 +67,90 @@ STOP_WORDS = set([
     "summary", "available"
 ])
 
-# ✅ Predefined Prompts
+# ✅ Predefined Prompts - Restructured
 PREDEFINED_PROMPTS = {
-    "Top Issues": [
-        "What is the most frequent subcategory in the 'Bridge Issue' column?",
-        "What is the most frequent subcategory in the 'MM Card Issue' column?",
-        "What is the most frequent subcategory in the 'MM Card Partner issue' column?",
-        "What is the most frequent subcategory in the 'Dashboard Issue' column?",
-        "What is the most frequent subcategory in the 'KYC Issue' column?",
-        "What is the most frequent subcategory in the 'Dashboard Issue - Subcategory' column?",
-        "What is the most frequent subcategory in the 'KYC Issue - Subcategory' column?",
-        "What is the most frequent subcategory in the 'Buy issue' column?",
-        "What is the most frequent subcategory in the 'Sell issue' column?",
-        "What is the most frequent subcategory in the 'Snaps Category' column?",
-        "What is the most frequent subcategory in the 'Staking Feature' column?",
-        "What is the most frequent subcategory in the 'Validator Staking Issue' column?",
-        "What is the most frequent subcategory in the 'Pooled Staking Issue' column?",
-        "What is the most frequent subcategory in the 'Liquid Staking Issue' column?",
-        "What is the most frequent subcategory in the 'Third Party Staking' column?",
-        "What is the most frequent subcategory in the 'Swaps issue' column?",
-        "What is the most frequent subcategory in the 'Wallet issue' column?"
-    ],
-    "Trends": [
-        "How many conversations occurred in each subcategory?",
-        "What percentage of total issues does each subcategory represent?",
-        "How have issue frequencies changed over time?",
-        "What correlations exist between different issue types?",
-        "Are there seasonal trends in user-reported issues?"
-    ],
-    "Keyword Analysis": [
-        "What are the top 10 most important keywords in the summaries?",
-        "What sentiment trends can be observed from the summaries?"
-    ],
-    "Conversation Volume": [
-        "How many conversations are in each MetaMask area?",
-        "Which MetaMask area has seen the highest increase in conversations?"
-    ]
+    "GLOBAL": { # Prompts applicable to most/all reports
+        "Trends": [
+            "How many conversations occurred in each subcategory?", # This might need to be more generic or context-aware
+            "What percentage of total issues does each subcategory represent?", # Ditto
+            "How have issue frequencies changed over time?",
+            "What correlations exist between different issue types?",
+            "Are there seasonal trends in user-reported issues?"
+        ],
+        "Keyword Analysis": [
+            "What are the top 10 most important keywords?", # Removed 'in the summaries' for generality
+            "What sentiment trends can be observed?" # Removed 'from the summaries'
+        ],
+        "Conversation Volume": [
+            "How many conversations are in each MetaMask area?", # This is specific, might move or rephrase
+            "Which MetaMask area has seen the highest increase in conversations?" # Ditto
+        ]
+    },
+    "Security": { # Prompts specific to the Security product area
+        "Scam Vector Analysis": [
+            "What is the most frequent value in the 'scam vector' field?",
+            "What are the counts for each 'scam vector' value (e.g., Address Poisoning, Airdrop Claim, etc.)?",
+            "What percentage of Security conversations does each 'scam vector' represent?",
+            "Are there any notable keywords or summaries associated with high-frequency 'scam vector' types?"
+        ],
+        "Phishing Method Analysis": [ # New category for Phishing Method
+            "What is the most frequent value in the 'Phishing Method' field?",
+            "What are the counts for each 'Phishing Method' value (e.g., Angler phishing, Email phishing, etc.)?",
+            "What percentage of Security conversations does each 'Phishing Method' represent?",
+            "Are there any notable keywords or summaries associated with high-frequency 'Phishing Method' types?"
+        ],
+        "Funds Missing Analysis": [
+            "What is the most frequent reason in the 'Funds missing' field (e.g., SRP/PKcompromised, User error, Report scam, No funds lost)?",
+            "What are the counts for each 'Funds missing' reason (e.g., SRP/PKcompromised, Unintended contract interaction, User error, Ecosystem exploit, No information, No funds lost, Unknown, Blockaid false positive, eth-phishing-detect false positive, Law enforcement / legal inquiry, Report scam, Request for update on prior ticket, Security questions)?",
+            "What percentage of Security conversations does each 'Funds missing' reason represent?",
+            "Are there notable keywords or summaries associated with high-frequency 'Funds missing' reasons, especially for actual loss categories vs. 'No funds lost' categories?"
+        ],
+        "Compromise Method Analysis": [ # New category for SRP/PK Compromise Methods
+            "If 'Funds missing' is 'SRP/PKcompromised', what is the most frequent value in the 'Compromise Method' field (e.g., Malware, Rotten Seed)?",
+            "What are the counts for each 'Compromise Method' (e.g., Malware, Rotten Seed, SRP Digitally Stolen, SRP Phished Directly, SRP Physically Stolen)?",
+            "What percentage of SRP/PK compromised conversations does each 'Compromise Method' represent?",
+            "Are there specific keywords or summary patterns associated with different 'Compromise Method' types like 'Malware' or 'Rotten Seed'?"
+        ],
+        "Top Issues": [ # Security might still have other general issue columns, if applicable
+            # Add prompts here if Security uses other columns from CATEGORY_HEADERS like "Security Issue Subcategory"
+        ]
+    },
+    "Card": {
+        "Top Issues": [
+            "What is the most frequent subcategory in the 'MM Card Issue' column?",
+            "What is the most frequent subcategory in the 'MM Card Partner issue' column?",
+            "What is the most frequent subcategory in the 'Dashboard Issue' column (related to Card)?",
+            "What is the most frequent subcategory in the 'KYC Issue' column (related to Card)?"
+        ]
+    },
+    "Bridges": {
+        "Top Issues": ["What is the most frequent subcategory in the 'Bridge Issue' column?"]
+    },
+    "Ramps": {
+        "Top Issues": [
+            "What is the most frequent subcategory in the 'Buy issue' column?",
+            "What is the most frequent subcategory in the 'Sell issue' column?"
+        ]
+    },
+    "Snaps": {
+        "Top Issues": ["What is the most frequent subcategory in the 'Snaps Category' column?"]
+    },
+    "Staking": {
+        "Top Issues": [
+            "What is the most frequent subcategory in the 'Staking Feature' column?",
+            "What is the most frequent subcategory in the 'Validator Staking Issue' column?",
+            "What is the most frequent subcategory in the 'Pooled Staking Issue' column?",
+            "What is the most frequent subcategory in the 'Liquid Staking Issue' column?",
+            "What is the most frequent subcategory in the 'Third Party Staking' column?"
+        ]
+    },
+    "Swaps": {
+        "Top Issues": ["What is the most frequent subcategory in the 'Swaps issue' column?"]
+    },
+    "Wallet": {
+        "Top Issues": ["What is the most frequent subcategory in the 'Wallet issue' column?"]
+    }
+    # Add other product areas (Dashboard, SDK, Wallet API, Portfolio, Solana) if they have specific columns/prompts
 }
 
 # Removed get_last_week_dates() - dates will be passed from app.py
@@ -167,7 +215,27 @@ def search_conversations(
         {"field": "statistics.last_close_at", "operator": "<", "value": int(end_timestamp)}
     ]
 
+    # --- Corrected and Uncommmented Product Area Filtering ---
+    # Assuming the actual custom attribute name is "metamask_area". 
+    # If it's different (e.g., "MetaMask area" with a space), this needs to be adjusted.
+    ACTUAL_PRODUCT_AREA_CUSTOM_ATTRIBUTE_NAME = "MetaMask area" # UPDATED: Was "metamask_area"
+
     if product_area_filter_value:
+        # --- ADD PRINT HERE ---
+        print(f"👉 VERIFY: Using product area filter: custom_attribute.{ACTUAL_PRODUCT_AREA_CUSTOM_ATTRIBUTE_NAME} = '{product_area_filter_value}'. Ensure attribute name and value EXACTLY match Intercom.")
+        # --- END ADD PRINT ---
+        api_product_area_field = f"custom_attribute.{ACTUAL_PRODUCT_AREA_CUSTOM_ATTRIBUTE_NAME}" 
+        query_filters.append({
+            "field": api_product_area_field,
+            "operator": "=", 
+            "value": product_area_filter_value
+        })
+        print(f"   Adding API product area filter: '{api_product_area_field}' = '{product_area_filter_value}'")
+        # print(f"   Product area filter ('{product_area_filter_value}') specified, but API-level filtering for product area is currently disabled. Filtering will occur post-fetch.") # Removed this line
+    # --- End Corrected Product Area Filtering ---
+
+    if team_filter_details: # Add team filter if provided
+        query_filters.append(team_filter_details)
         # api_product_area_field = "custom_attribute.metamask_area" 
         # query_filters.append({
         #     "field": api_product_area_field,
@@ -192,16 +260,19 @@ def search_conversations(
 
     all_conversations = []
     retries = 3
-    initial_timeout = 45 # Increased initial timeout slightly
-    retry_timeout = 60   # Timeout for retries
+    initial_timeout = 35 # MODIFIED from 45
+    retry_timeout = 50   # MODIFIED from 60
 
     print(f"🔍 Intercom Search: Attempting to fetch conversations from {start_date_str} to {end_date_str}")
-    print(f"   Initial Payload: {json.dumps(payload)}") # Log the initial payload (json.dumps for pretty print)
+    # print(f"   Initial Payload: {json.dumps(payload)}") # Log the initial payload (json.dumps for pretty print)
 
     page_count = 0
     while True:
         page_count += 1
         print(f"   Fetching page {page_count}...")
+        # --- Add detailed logging of the exact payload for each request ---
+        print(f"   DEBUG: Sending payload to Intercom for page {page_count}: {json.dumps(payload, indent=2)}")
+        # --- End detailed logging ---
         current_timeout = retry_timeout if page_count > 1 else initial_timeout
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=current_timeout)
@@ -421,26 +492,69 @@ def get_text_sentiment_tuple(text_input):
 
 # ✅ Analyze XLSX and generate insights
 def analyze_xlsx_and_generate_insights(xlsx_file, meta_mask_area, week_start_str_for_files, week_end_str_for_files):
-    """Analyzes the Excel file, generates structured insights, and ensures predefined prompts are answered."""
+    """Analyzes the Excel file, generates structured insights based on PREDEFINED_PROMPTS."""
     if not xlsx_file or not os.path.exists(xlsx_file):
         print(f"Skipping analysis for {meta_mask_area}: XLSX file not found or not provided ({xlsx_file})")
         return None
     
     print(f"📊 Analyzing {xlsx_file} for {meta_mask_area}...")
     df = pd.read_excel(xlsx_file)
-    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip() # Clean column names
     
-    print(f"Columns in {meta_mask_area} XLSX: {df.columns.tolist()}")
-    
-    issue_columns = [col for col in df.columns if col not in ['conversation_id', 'summary', 'transcript']]
     insights_file_name = f"{meta_mask_area.lower()}_insights_{week_start_str_for_files}_to_{week_end_str_for_files}.txt"
     insights_file_path = os.path.join(INSIGHTS_DIR, insights_file_name)
     
     if not os.path.exists(INSIGHTS_DIR):
         os.makedirs(INSIGHTS_DIR)
     
-    analysis_text = [f"🚀 **Analysis for {meta_mask_area}**\n", "=" * 50]
+    analysis_text = [f"🚀 **Analysis for {meta_mask_area} ({week_start_str_for_files} to {week_end_str_for_files})**\n", "=" * 60, "\n\n"]
     
+    # --- Helper function to generate frequency analysis for a column ---
+    def generate_frequency_analysis(column_name, df_subset=None, conditional_column=None, conditional_value=None):
+        if df_subset is None:
+            df_subset = df # Use the full dataframe if no subset is provided
+        
+        text_lines = []
+        if column_name not in df_subset.columns:
+            text_lines.append(f"    Column '{column_name}' not found in the data for this section.")
+            return text_lines
+
+        # If conditional, filter the subset further
+        if conditional_column and conditional_value:
+            if conditional_column not in df_subset.columns:
+                text_lines.append(f"    Conditional column '{conditional_column}' not found.")
+                return text_lines
+            df_subset = df_subset[df_subset[conditional_column] == conditional_value]
+            if df_subset.empty:
+                text_lines.append(f"    No data where '{conditional_column}' is '{conditional_value}' to analyze '{column_name}'.")
+                return text_lines
+            text_lines.append(f"    (Analysis for '{column_name}' where '{conditional_column}' = '{conditional_value}')")
+
+        cleaned_series = df_subset[column_name].dropna().astype(str) # Ensure string type and drop NAs
+        if cleaned_series.empty:
+            text_lines.append(f"    No data available in '{column_name}' for frequency analysis.")
+            return text_lines
+
+        value_counts = cleaned_series.value_counts()
+        total_count = value_counts.sum()
+        percentages = (value_counts / total_count * 100).round(2)
+
+        if not value_counts.empty:
+            most_frequent = value_counts.index[0]
+            count = value_counts.iloc[0]
+            text_lines.append(f"    Most frequent value: **{most_frequent}** (Count: {count}, {percentages.iloc[0]:.2f}% of relevant entries)")
+            text_lines.append(f"\n    Full Breakdown for '{column_name}':")
+            text_lines.append(f"      {str(most_frequent):<40}{'Count':<10}{'Percentage':<12}")
+            text_lines.append(f"      {'-'*39}{'-'*9}{'-'*11}")
+            rank = 1
+            for item, num in value_counts.items():
+                percent = percentages.get(item, 0.0)
+                text_lines.append(f"      {rank}. {str(item):<37}{num:<10}{percent:>10.2f}%")
+                rank +=1
+        else:
+            text_lines.append(f"    No countable values found in '{column_name}'.")
+        return text_lines
+
     # --- Determine text source for keywords and sentiment ---
     text_source_column = None
     keyword_source_message = "" 
@@ -462,156 +576,104 @@ def analyze_xlsx_and_generate_insights(xlsx_file, meta_mask_area, week_start_str
             text_source_column = 'transcript'
             keyword_source_message = " (from transcripts - summaries were unavailable/empty)"
     
-    # --- Keyword extraction logic ---
-    keywords_list = []
-    keyword_contexts = []
-    
-    if text_source_column and text_source_column in df.columns:
-        text_for_keywords_series = df[text_source_column][df[text_source_column].notna()].astype(str)
-        if not text_for_keywords_series.empty:
-            word_series = text_for_keywords_series.str.lower().str.split(expand=True).stack()
-            word_series = word_series.str.replace(r'^[^\w\s]+|[^\w\s]+$', '', regex=True) 
-            word_series = word_series[word_series != ''] 
-            filtered_words = word_series[~word_series.isin(STOP_WORDS) & (word_series.str.len() > 2)]
-            
-            if not filtered_words.empty:
-                top_words_counts = filtered_words.value_counts().head(10)
-                if not top_words_counts.empty:
-                    keywords_list = top_words_counts.index.tolist()
-                    for keyword in keywords_list:
-                        pattern = r'\b' + re.escape(keyword) + r'\b' 
-                        context_matches = text_for_keywords_series[text_for_keywords_series.str.contains(pattern, case=False, na=False, regex=True)]
-                        keyword_contexts.extend(context_matches.head(2).tolist()) 
+    # --- Combine Global and Area-Specific Prompts ---
+    prompts_to_process = {}
+    global_prompts = PREDEFINED_PROMPTS.get("GLOBAL", {})
+    area_specific_prompts = PREDEFINED_PROMPTS.get(meta_mask_area, {})
+
+    for category, cat_prompts in global_prompts.items():
+        if category not in prompts_to_process: prompts_to_process[category] = []
+        prompts_to_process[category].extend(cat_prompts)
+    for category, cat_prompts in area_specific_prompts.items():
+        if category not in prompts_to_process: prompts_to_process[category] = []
+        prompts_to_process[category].extend(cat_prompts)
+
+    # --- Process Prompts ---
+    for category_title, individual_prompts in prompts_to_process.items():
+        analysis_text.append(f"\n🔹 **{category_title.replace('_', ' ')}**") # Nicer category titles
+        
+        for prompt_text in individual_prompts:
+            analysis_text.append(f"\n  *Prompt: {prompt_text}*")
+            answered = False
+
+            # Keyword Analysis (GLOBAL)
+            if category_title == "Keyword Analysis" and "top 10 most important keywords" in prompt_text:
+                if text_source_column:
+                    text_for_keywords_series = df[text_source_column][df[text_source_column].notna()].astype(str)
+                    if not text_for_keywords_series.empty:
+                        word_series = text_for_keywords_series.str.lower().str.split(expand=True).stack()
+                        word_series = word_series.str.replace(r'^[^\w\s]+|[^\w\s]+$', '', regex=True) 
+                        word_series = word_series[word_series != ''] 
+                        filtered_words = word_series[~word_series.isin(STOP_WORDS) & (word_series.str.len() > 2)]
+                        if not filtered_words.empty:
+                            top_words_counts = filtered_words.value_counts().head(10)
+                            if not top_words_counts.empty:
+                                analysis_text.append("\n  Top Keywords:")
+                                for kw, count in top_words_counts.items(): analysis_text.append(f"    - {kw} ({count})")
+                            else: analysis_text.append("    No significant keywords found after filtering.")
+                        else: analysis_text.append("    No words left after filtering for stop words and length.")
+                    else: analysis_text.append(f"    No valid text in '{text_source_column}' for keyword extraction.")
+                else: analysis_text.append("    No text source (summary/transcript) available for keyword extraction.")
+                answered = True
+            # Sentiment Analysis (GLOBAL)
+            elif category_title == "Keyword Analysis" and "sentiment trends can be observed" in prompt_text:
+                if text_source_column and 'sentiment_polarity' not in df.columns: # Calculate if not already done
+                    sentiments = df[text_source_column].apply(get_text_sentiment_tuple) 
+                    df['sentiment_polarity'] = sentiments.apply(lambda x: x[0] if isinstance(x, tuple) else 0.0)
+                    df['sentiment_subjectivity'] = sentiments.apply(lambda x: x[1] if isinstance(x, tuple) else 0.0)
+                # ... (add positive/negative/neutral counts as before if desired)
+                if text_source_column and 'sentiment_polarity' in df.columns and df['sentiment_polarity'].notna().any():
+                    valid_sentiment_df = df[df['sentiment_polarity'].notna()] # Ensure we only use valid scores
+
+                    avg_polarity = valid_sentiment_df['sentiment_polarity'].mean()
+                    avg_subjectivity = valid_sentiment_df['sentiment_subjectivity'].mean()
+                    analysis_text.append(f"Source Text for Sentiment: {text_source_column.capitalize()}{keyword_source_message}")
+                    analysis_text.append(f"Average Sentiment Polarity: {avg_polarity:.2f} (Range: -1 Negative to +1 Positive)")
+                    analysis_text.append(f"Average Sentiment Subjectivity: {avg_subjectivity:.2f} (Range: 0 Objective to 1 Subjective)")
+                    # ... (add positive/negative/neutral counts as before if desired)
+                else: analysis_text.append("    Sentiment analysis not performed or no valid scores.")
+                answered = True
+
+            # Security Specific Analyses
+            elif meta_mask_area == "Security":
+                if category_title == "Scam Vector Analysis":
+                    analysis_text.extend(generate_frequency_analysis("scam vector"))
+                    answered = True
+                elif category_title == "Phishing Method Analysis":
+                    analysis_text.extend(generate_frequency_analysis("Phishing Method"))
+                    answered = True
+                elif category_title == "Funds Missing Analysis":
+                    # This prompt has multiple parts usually covered by generate_frequency_analysis for "Funds missing"
+                    analysis_text.extend(generate_frequency_analysis("Funds missing"))
+                    # Specific prompt for keywords related to loss could be added here if needed
+                    answered = True
+                elif category_title == "Compromise Method Analysis":
+                    # Conditional analysis: only if "Funds missing" is "SRP/PKcompromised"
+                    # The prompt phrasing implies this, so the helper handles it.
+                    analysis_text.extend(generate_frequency_analysis("Compromise Method", conditional_column="Funds missing", conditional_value="SRP/PKcompromised"))
+                    answered = True
+
+            # Top Issues (Area-Specific)
+            # This logic now finds the column name from the prompt itself.
+            elif category_title == "Top Issues" and "most frequent subcategory in the '" in prompt_text:
+                match = re.search(r"in the '([^\']+)' column", prompt_text)
+                if match:
+                    issue_column_from_prompt = match.group(1)
+                    analysis_text.extend(generate_frequency_analysis(issue_column_from_prompt))
+                    answered = True
                 else:
-                    keywords_list = [f"No keywords found after filtering{keyword_source_message}"]
-            else:
-                keywords_list = [f"No keywords found after filtering{keyword_source_message}"]
-        else:
-             keywords_list = [f"No valid text in '{text_source_column}' for keyword extraction{keyword_source_message}."]
-    else:
-        keywords_list = ["No text available in summaries or transcripts for keyword extraction."]
+                    analysis_text.append("    Could not parse column name from 'Top Issues' prompt.")
+                    answered = True # Mark as answered to avoid "Not specifically answered"
 
-    # --- Sentiment Analysis ---
-    df['sentiment_polarity'] = 0.0  
-    df['sentiment_subjectivity'] = 0.0 
-
-    if text_source_column and text_source_column in df.columns:
-        print(f"Calculating sentiment from '{text_source_column}' column for {meta_mask_area}...")
-        # Now calls the global get_text_sentiment_tuple
-        sentiments = df[text_source_column].apply(get_text_sentiment_tuple) 
-        df['sentiment_polarity'] = sentiments.apply(lambda x: x[0] if isinstance(x, tuple) else 0.0)
-        df['sentiment_subjectivity'] = sentiments.apply(lambda x: x[1] if isinstance(x, tuple) else 0.0)
-        print(f"Sentiment calculation complete for {meta_mask_area}.")
-    else:
-        print(f"Skipping sentiment analysis for {meta_mask_area} as no valid text source was found.")
-    
-    # --- Issue Breakdown ---
-    if issue_columns:
-        issue_col = issue_columns[0] 
-        print(f"📝 Processing issue column: {issue_col}")
-        if not df[issue_col].dropna().empty:
-            most_frequent = df[issue_col].value_counts().idxmax()
-            count = df[issue_col].value_counts().max()
-            total_issues = df[issue_col].value_counts().sum()
-            issue_percentages = (df[issue_col].value_counts(normalize=True) * 100).round(2)
-            analysis_text.append(f"\n🔹 **Most Frequent Issue ({issue_col}):**\n{most_frequent} (Count: {count})\n")
-            analysis_text.append("\n🔹 **Full Breakdown of Issues:**\n")
-            analysis_text.append(f"{'Issue':<35}{'Count':<10}{'Percentage':<10}")
-            analysis_text.append("-" * 55)
-            for issue, value in df[issue_col].value_counts().items():
-                percentage = issue_percentages.get(issue, 0.00)
-                analysis_text.append(f"{issue:<35}{value:<10}{percentage:.2f}%")
+            # Fallback for Trends and Conversation Volume or other complex prompts
+            if not answered and category_title in ["Trends", "Conversation Volume"]:
+                analysis_text.append("    Detailed analysis for this trend/volume prompt is not yet implemented.")
+                answered = True # Mark as handled for now
             
-    # ✅ Deeper Explanation: Why These Issues Occur
-    if keyword_contexts:
-        analysis_text.append(f"\n🔹 **Context for Keywords{keyword_source_message}**")
-        analysis_text.append("Common themes based on extracted keywords include:\n")
-        unique_contexts = list(set(keyword_contexts)) # Deduplicate contexts
-        for context in unique_contexts[:5]: # Show up to 5 unique contexts
-            highlighted_context = context
-            if keywords_list and not (len(keywords_list) == 1 and "No keywords" in keywords_list[0]):
-                 for kw in keywords_list:
-                    # Ensure keyword is treated as a literal string in regex for highlighting
-                    pattern = r'(\b)(' + re.escape(kw) + r')(\b)'
-                    highlighted_context = re.sub(pattern, r'\1**\2**\3', highlighted_context, flags=re.IGNORECASE)
-            analysis_text.append(f"- \"{highlighted_context}\"")
-    elif keywords_list and "No keywords" in keywords_list[0]: # If there was a "no keywords" message
-         analysis_text.append(f"\n🔹 **Context for Keywords{keyword_source_message}**")
-         analysis_text.append(keywords_list[0])
-    
-    # --- Sentiment Analysis Report Section ---
-    analysis_text.append("\n\n🔹 **Sentiment Analysis Results**")
-    # Check if sentiment analysis was actually run and produced results
-    if text_source_column and 'sentiment_polarity' in df.columns and df['sentiment_polarity'].notna().any():
-        valid_sentiment_df = df[df['sentiment_polarity'].notna()] # Ensure we only use valid scores
+            if not answered:
+                analysis_text.append("    This specific prompt is not automatically answered by current logic.")
 
-        avg_polarity = valid_sentiment_df['sentiment_polarity'].mean()
-        avg_subjectivity = valid_sentiment_df['sentiment_subjectivity'].mean()
-        analysis_text.append(f"Source Text for Sentiment: {text_source_column.capitalize()}{keyword_source_message}")
-        analysis_text.append(f"Average Sentiment Polarity: {avg_polarity:.2f} (Range: -1 Negative to +1 Positive)")
-        analysis_text.append(f"Average Sentiment Subjectivity: {avg_subjectivity:.2f} (Range: 0 Objective to 1 Subjective)")
-
-        positive_threshold = 0.05 
-        negative_threshold = -0.05 
-        
-        positive_count = valid_sentiment_df[valid_sentiment_df['sentiment_polarity'] > positive_threshold].shape[0]
-        negative_count = valid_sentiment_df[valid_sentiment_df['sentiment_polarity'] < negative_threshold].shape[0]
-        neutral_count = valid_sentiment_df[
-            (valid_sentiment_df['sentiment_polarity'] >= negative_threshold) & (valid_sentiment_df['sentiment_polarity'] <= positive_threshold)
-        ].shape[0]
-        
-        total_classified_sentiments = positive_count + negative_count + neutral_count
-
-        if total_classified_sentiments > 0:
-            analysis_text.append("\nSentiment Distribution:")
-            analysis_text.append(f"  - Positive (> {positive_threshold:.2f}): {positive_count} ({positive_count/total_classified_sentiments:.1%})")
-            analysis_text.append(f"  - Neutral ({negative_threshold:.2f} to {positive_threshold:.2f}): {neutral_count} ({neutral_count/total_classified_sentiments:.1%})")
-            analysis_text.append(f"  - Negative (< {negative_threshold:.2f}): {negative_count} ({negative_count/total_classified_sentiments:.1%})")
-        else:
-            analysis_text.append("\nNo conversations with scoreable sentiment for distribution analysis.")
-        
-        if text_source_column in valid_sentiment_df.columns:
-            sorted_by_polarity = valid_sentiment_df.sort_values(by='sentiment_polarity', ascending=False)
-            
-            positive_examples = sorted_by_polarity[sorted_by_polarity['sentiment_polarity'] > positive_threshold]
-            if not positive_examples.empty:
-                analysis_text.append("\nExamples of Most Positive Conversations (up to 2):")
-                for _, row in positive_examples.head(2).iterrows():
-                    text_preview = str(row[text_source_column])[:150].replace('\n', ' ').strip()
-                    analysis_text.append(f"  - Polarity: {row['sentiment_polarity']:.2f} | Text: \"{text_preview}...\"")
-            
-            negative_examples = sorted_by_polarity[sorted_by_polarity['sentiment_polarity'] < negative_threshold].sort_values(by='sentiment_polarity', ascending=True)
-            if not negative_examples.empty:
-                analysis_text.append("\nExamples of Most Negative Conversations (up to 2):")
-                for _, row in negative_examples.head(2).iterrows(): # Changed from .tail().sort_values() to make it simpler
-                    text_preview = str(row[text_source_column])[:150].replace('\n', ' ').strip()
-                    analysis_text.append(f"  - Polarity: {row['sentiment_polarity']:.2f} | Text: \"{text_preview}...\"")
-    else:
-        analysis_text.append("Sentiment analysis was not performed or yielded no valid scores.")
-
-    # --- Predefined Prompt Analysis ---
-    analysis_text.append("\n\n🔹 **Predefined Prompt Analysis:**")
-    for category, prompts in PREDEFINED_PROMPTS.items():
-        if category in ["Keyword Analysis", "Trends", "Conversation Volume"] or meta_mask_area in PREDEFINED_PROMPTS:
-            for prompt in prompts:
-                if "top 10 most important keywords" in prompt:
-                    analysis_text.append(f"\n**{prompt.replace('in the summaries', '')}{keyword_source_message}**")
-                    if keywords_list and not (len(keywords_list) == 1 and ("No keywords found" in keywords_list[0] or "No text available" in keywords_list[0])):
-                        analysis_text.append("\n".join([f"- {kw}" for kw in keywords_list]))
-                    else:
-                        analysis_text.append(keywords_list[0] if keywords_list else "Keyword data unavailable.")
-                elif "sentiment trends" in prompt: # Answer sentiment prompt
-                    analysis_text.append(f"\n**{prompt.replace('in the summaries', '')}{keyword_source_message}**")
-                    if text_source_column and 'sentiment_polarity' in df.columns and df['sentiment_polarity'].notna().any():
-                        avg_pol_report = df[df['sentiment_polarity'].notna()]['sentiment_polarity'].mean()
-                        analysis_text.append(f"  Overall average polarity is {avg_pol_report:.2f}.")
-                        if total_classified_sentiments > 0: # Check if these counts are available
-                             analysis_text.append(f"  Distribution: Positive ({positive_count/total_classified_sentiments:.1%}), Neutral ({neutral_count/total_classified_sentiments:.1%}), Negative ({negative_count/total_classified_sentiments:.1%}).")
-                        else:
-                            analysis_text.append("  Detailed sentiment distribution not available.")
-                    else:
-                        analysis_text.append("  Sentiment analysis data not available to answer this prompt.")
-    
+    # --- Save insights file ---
     with open(insights_file_path, 'w', encoding='utf-8') as f:
         f.write("\n".join(analysis_text))
     
@@ -910,7 +972,7 @@ def main_function(
         print("⚠️ Could not fetch Intercom teams. ID-based API filtering for teams will be skipped.")
         available_intercom_teams = {} # Ensure it's an empty dict to avoid errors
     else:
-        print(f"  Found {len(available_intercom_teams)} teams in Intercom.")
+        print(f"  Found {len(available_intercom_teams)} teams in Intercom: {list(available_intercom_teams.keys())}") # Log fetched team names
 
     # Priority: Use team_assignee_id if target_team_name matches a fetched team name
     if target_team_name and target_team_name in available_intercom_teams:
@@ -930,17 +992,36 @@ def main_function(
     elif target_team_name == "Solana": 
         team_api_filter_details = {"field": "custom_attribute.metamask_area", "operator": "=", "value": "Solana"}
         print(f"ℹ️ (Fallback) Will attempt to filter initial Intercom search for Team: Solana (metamask_area = Solana)")
-    elif target_team_name:
+    elif target_team_name: # This will include "Phosphor TS" if not caught by ID check
         # If target_team_name was provided but didn't match any ID or specific fallback logic
-        print(f"⚠️ Target team '{target_team_name}' not found in fetched Intercom teams or specific fallbacks. API-level team filtering may not be applied. Python-side filtering will still occur.")
+        print(f"⚠️ Target team '{target_team_name}' not found in fetched Intercom teams or specific fallbacks. API-level team filtering may not be applied for this team. Python-side filtering will still occur if possible.")
+        # team_api_filter_details remains None for this specific target_team_name
         
-    # Product area filter is applied if target_product_area_name is set (and not ALL_AREAS)
-    # This will be ANDed with any team filter.
-    if target_product_area_name and target_product_area_name != "ALL_AREAS":
+    # Product area filter is applied if target_product_area_name is set (and not ALL_AREAS or empty string)
+    # An empty string for target_product_area_name means no PA filter (e.g., for Phosphor TS)
+    # Note: app.py converts empty string from UI to None before calling this function.
+    if target_product_area_name and target_product_area_name != "ALL_AREAS": # `None` will not satisfy this condition
         product_area_api_filter_value = target_product_area_name
         print(f"ℹ️ Will attempt to filter initial Intercom search by Product Area: {product_area_api_filter_value}")
+    else:
+        # If target_product_area_name is None (from empty string in UI), "ALL_AREAS", no specific product area API filter is applied.
+        print(f"ℹ️ No specific product area API filter will be applied (target_product_area_name from app.py: '{target_product_area_name}').")
+        # product_area_api_filter_value remains None here by default if not set above
 
+    print(f"🔎 Pre-Safety Check Filter Status:")
+    print(f"   - target_team_name: '{target_team_name}'")
+    print(f"   - team_api_filter_details: {team_api_filter_details}")
+    print(f"   - target_product_area_name (from app.py): '{target_product_area_name}'")
+    print(f"   - product_area_api_filter_value (used for search): '{product_area_api_filter_value}'")
 
+    # --- Safety check for overly broad queries ---
+    if target_team_name and not team_api_filter_details and \
+       (not product_area_api_filter_value or product_area_api_filter_value == "ALL_AREAS"):
+        message = f"Configuration for team '{target_team_name}' does not allow for specific API-level filtering, and no specific product area was selected to narrow the search. Query would be too broad and is not permitted. Please ensure '{target_team_name}' is an exact match to an Intercom team name with an ID, or define a custom attribute filter for it."
+        print(f"❌ SAFETY CHECK TRIGGERED: {message}")
+        return {"status": "failed", "message": message, "local_files": [], "gdrive_urls": [], "processed_counts": {}}
+
+    print("✅ Safety check passed or not applicable.")
     conversations = search_conversations(
         start_date_str, 
         end_date_str, 
