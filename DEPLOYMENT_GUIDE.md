@@ -212,4 +212,31 @@ After deployment, you can:
 1. Set up CloudWatch alarms for error monitoring
 2. Configure a custom domain name using Route 53
 3. Add API authentication if needed
-4. Set up automated backups of S3 reports 
+4. Set up automated backups of S3 reports
+
+## AWS S3 Upload Instructions
+
+If you need to upload files to AWS S3, you can use the AWS CLI or a third-party tool like AWS Transfer Family.
+
+### Using AWS CLI
+
+1. **Install AWS CLI**
+   ```bash
+   pip install awscli
+   ```
+
+2. **Upload files**
+   ```bash
+   aws s3 cp <local-file-path> s3://<bucket-name>/<object-key>
+   ```
+
+### Using AWS Transfer Family
+
+1. **Set up AWS Transfer Family**
+   - Follow the [AWS Transfer Family documentation](https://docs.aws.amazon.com/transfer/latest/userguide/setting-up.html)
+
+2. **Configure the transfer**
+   - Set up a transfer rule to move files from your local filesystem to AWS S3
+
+3. **Monitor the transfer**
+   - Use AWS CloudWatch to monitor the transfer process and troubleshoot any issues 

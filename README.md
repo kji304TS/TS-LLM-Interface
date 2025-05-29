@@ -157,8 +157,6 @@ The main processing script `scripts/LLM5.py` can also be run directly from the c
 
     *   **Output Control:**
         *   `-u`, `--upload`: Enable uploading of generated files to Google Drive (requires GDrive env vars).
-            Example (single conversation with upload): `python scripts/LLM5.py -c 123456789 -u`
-            Example (date range with upload): `python scripts/LLM5.py --start_date "..." --end_date "..." -u`
         *   `--send_slack`: Send generated team EoS reports to Slack (requires Slack env vars and configuration in `utils/slack_notifier.py`).
             Example: `python scripts/LLM5.py --target-team "MetaMask TS" --send_slack`
 
@@ -319,6 +317,33 @@ pip install -r requirements.txt
 cdk bootstrap
 cdk deploy
 ```
+
+## AWS S3 Upload Support
+
+The application supports uploading generated files to AWS S3. This is useful for cloud storage and sharing reports.
+
+### Setting up AWS Credentials
+Add the following to your `.env` file:
+
+```
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_S3_BUCKET=your-bucket-name
+AWS_REGION=us-east-1
+```
+
+### Using the S3 Upload Endpoint
+
+To upload a file from `output_files/` to your S3 bucket, call the FastAPI endpoint:
+
+```
+POST /upload-to-s3/
+{
+  "filename": "your_report.xlsx"
+}
+```
+
+The response will include the S3 URL if successful.
 
 ## Slack Data Scraping
 

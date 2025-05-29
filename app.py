@@ -13,9 +13,10 @@ import io
 import logging
 from logging.handlers import RotatingFileHandler
 import asyncio
+from utils.s3_uploader import upload_file_to_s3
 
 
-# --- Import GDrive uploader --- 
+# --- Import GDrive uploader ---
 # Removed: from utils.gdrive_uploader import upload_file_to_drive
 from utils.time_utils import calculate_dates_from_preset # New import
 from utils.intercom_team_fetcher import get_intercom_teams # Import for fetching teams
@@ -156,7 +157,7 @@ async def test_post_new_endpoint(data: ScriptRequest): # Can reuse ScriptRequest
 
 # Default allowed origins for development
 DEFAULT_ALLOWED_ORIGINS = [
-    "https://kji304ts.github.io",
+    "https://blhafner.github.io",
     "http://192.168.0.27:8080",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
@@ -446,3 +447,13 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+@app.post("/upload-to-s3/")
+async def upload_to_s3_endpoint(filename: str):
+    s3_key = f"uploads/{filename}"
+    file_path = f"output_files/{filename}"
+    s3_url = await upload_file_to_s3(file_path, s3_key)
+    if s3_url:
+        return {"status": "success", "s3_url": s3_url}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to upload to S3")
