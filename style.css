@@ -11,9 +11,10 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--metamask-dark-bg);
-  color: var(--metamask-text-light);
+  font-family: Arial, sans-serif;
+  background-color: #121212;
+  color: #ffffff;
+  padding: 0;
   margin: 0;
   padding: 20px;
   line-height: 1.6;
@@ -91,16 +92,20 @@ button[type="submit"] {
   cursor: pointer;
   font-size: 1em;
   font-weight: bold;
-  transition: background-color 0.3s ease;
+  font-size: 1.25em;
+  margin-top: 5px;
 }
 
-button[type="submit"]:hover {
-  background-color: var(--metamask-orange-light);
+button:hover {
+  background-color: #9a3dcf;
 }
 
-#statusMessage, #statusMessageLlm5 {
-  margin-top: 20px;
-  padding: 10px;
+
+
+input[type="date"] {
+  background-color: #222;
+  color: white;
+  border: 2px solid violet;
   border-radius: 5px;
   font-weight: normal; /* Adjusted from bold */
 }

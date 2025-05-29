@@ -1,51 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/style.css">
   <title>IBuddy</title>
 </head>
-
 <body>
   <div class="banner">
-    <?xml version="1.0" encoding="iso-8859-1"?>
-    <!-- Generator: Adobe Illustrator 29.4.0, SVG Export Plug-In . SVG Version: 9.03 Build 0)  -->
-    <svg version="1.1" id="Banner_Logo" class="header-image" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-    	 viewBox="0 0 142 136.878" style="enable-background:new 0 0 142 136.878;" xml:space="preserve">
-    <path style="fill:#FF5C16;" d="M132.682,132.192l-30.583-9.106l-23.063,13.787l-16.092-0.007l-23.077-13.78l-30.569,9.106L0,100.801
-    	l9.299-34.839L0,36.507L9.299,0l47.766,28.538h27.85L132.682,0l9.299,36.507l-9.299,29.455l9.299,34.839L132.682,132.192
-    	L132.682,132.192z"/>
-    <path style="fill:#FF5C16;" d="M9.305,0l47.767,28.558l-1.899,19.599L9.305,0z M39.875,100.814l21.017,16.01l-21.017,6.261
-    	C39.875,123.085,39.875,100.814,39.875,100.814z M59.212,74.345l-4.039-26.174L29.317,65.97l-0.014-0.007v0.013l0.08,18.321
-    	l10.485-9.951L59.212,74.345L59.212,74.345z M132.682,0L84.915,28.558l1.893,19.599L132.682,0z M102.113,100.814l-21.018,16.01
-    	l21.018,6.261V100.814z M112.678,65.975h0.007H112.678v-0.013l-0.006,0.007L86.815,48.171l-4.039,26.174h19.336l10.492,9.95
-    	C112.604,84.295,112.678,65.975,112.678,65.975z"/>
-    <path style="fill:#E34807;" d="M39.868,123.085l-30.569,9.106L0,100.814h39.868C39.868,100.814,39.868,123.085,39.868,123.085z
-    	 M59.205,74.338l5.839,37.84l-8.093-21.04L29.37,84.295l10.491-9.956h19.344L59.205,74.338z M102.112,123.085l30.57,9.106
-    	l9.299-31.378h-39.869C102.112,100.814,102.112,123.085,102.112,123.085z M82.776,74.338l-5.839,37.84l8.092-21.04l27.583-6.843
-    	l-10.498-9.956H82.776V74.338z"/>
-    <path style="fill:#FF8D5D;" d="M0,100.801l9.299-34.839h19.997l0.073,18.327l27.584,6.843l8.092,21.039l-4.16,4.633l-21.017-16.01H0
-    	V100.801z M141.981,100.801l-9.299-34.839h-19.998l-0.073,18.327l-27.582,6.843l-8.093,21.039l4.159,4.633l21.018-16.01h39.868
-    	V100.801z M84.915,28.538h-27.85l-1.891,19.599l9.872,64.013h11.891l9.878-64.013L84.915,28.538z"/>
-    <path style="fill:#661800;" d="M9.299,0L0,36.507l9.299,29.455h19.997l25.87-17.804L9.299,0z M53.426,81.938h-9.059l-4.932,4.835
-    	l17.524,4.344l-3.533-9.186V81.938z M132.682,0l9.299,36.507l-9.299,29.455h-19.998L86.815,48.158L132.682,0z M88.568,81.938h9.072
-    	l4.932,4.841l-17.544,4.353l3.54-9.201V81.938z M79.029,124.385l2.067-7.567l-4.16-4.633h-11.9l-4.159,4.633l2.066,7.567"/>
-    <path style="fill:#C0C4CD;" d="M79.029,124.384v12.495H62.945v-12.495L79.029,124.384L79.029,124.384z"/>
-    <path style="fill:#E7EBF6;" d="M39.875,123.072l23.083,13.8v-12.495l-2.067-7.566C60.891,116.811,39.875,123.072,39.875,123.072z
-    	 M102.113,123.072l-23.084,13.8v-12.495l2.067-7.566C81.096,116.811,102.113,123.072,102.113,123.072z"/>
-    </svg>
+    <img src="intercom-llm-buddy-logo-2.png" alt="Intercom Logo" class="header-image" />
     <span>
-      IBuddy
+      Intercom LLM Buddy
     </span>
   </div>
 
-  <!-- Existing Form for MetaMask Area Specific Scripts -->
+  <!-- Updated Form with ID for JavaScript -->
   <form id="scriptForm">
-    <label for="scriptSelect">MetaMask Area (Individual Reports):</label>
+    <label for="scriptSelect">MetaMask Area:</label>
     <select id="scriptSelect" name="scriptSelect" required>
-        <option value="" selected disabled hidden>-select area-</option>
+        <option value="" selected disabled hidden>-select-</option>
         <option value="ramps5.py">Ramps</option>
         <option value="bridges5.py">Bridges</option>
         <option value="wallet5.py">Wallet</option>
@@ -59,131 +32,19 @@
         <option value="walletapi5.py">Wallet API</option>
     </select>
     <br><br>
-    <label for="startDate">Start Date & Time:</label>
-    <input type="datetime-local" id="startDate" name="startDate" required>
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" required>
     <br><br>
-    <label for="endDate">End Date & Time:</label>
-    <input type="datetime-local" id="endDate" name="endDate" required>
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" required>
     <br><br>
-    <div class="storage-mode">
-        <label for="storageMode">Storage Mode:</label>
-        <select id="storageMode" name="storageMode">
-            <option value="local">Local Storage</option>
-            <option value="gdrive">Google Drive</option>
-        </select>
-    </div>
-    <br><br>
-    <button type="submit">Run Area Report</button>
+    <button type="submit">Run</button>
   </form>
 
-  <div id="statusMessage" style="margin-top: 20px;"></div>
-  <div id="fileLinks" style="margin-top: 10px;"></div>
-  <button id="downloadZipButton" style="display: none; margin-top: 10px;">Download All as Zip</button>
+  <div id="statusMessage" style="margin-top: 20px; font-weight: bold;"></div>
 
-  <hr class="section-divider">
-
-  <!-- New Section for LLM5 Comprehensive Analysis -->
-  <div class="form-section">
-    <h2>Comprehensive Analysis (LLM5)</h2>
-    <form id="llm5Form">
-        <label for="timeframeLlm5">Select Timeframe:</label>
-        <select id="timeframeLlm5" name="timeframeLlm5" required>
-            <option value="last_hour">Last Hour</option>
-            <option value="last_8_hours">Last 8 Hours</option>
-            <option value="previous_8_hours">Previous 8 Hours</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="last_7_days">Last 7 Days</option>
-        </select>
-        <br><br>
-
-        <div>
-            <label for="targetTeamLlm5">Target Team:</label>
-            <select id="targetTeamLlm5" name="targetTeamLlm5">
-                <option value="ALL_TEAMS">All Teams</option>
-                <option value="MetaMask TS">MetaMask TS</option> 
-                <option value="Card">Card Team</option> 
-                <option value="Portfolio">Portfolio Team</option> 
-                <option value="Solana">Solana Team</option> 
-                <option value="MetaMask UST">MetaMask UST</option> 
-                <option value="MetaMask HD General">MetaMask HD General</option>
-                <option value="Unclassified">Unclassified</option> 
-            </select>
-        </div>
-        <br><br>
-
-        <div>
-            <label for="targetProductAreaLlm5">Target Product Area:</label>
-            <select id="targetProductAreaLlm5" name="targetProductAreaLlm5">
-                <option value="ALL_AREAS">All Product Areas</option>
-                <option value="Bridges">Bridges</option>
-                <option value="Card">Card</option>
-                <option value="Dashboard">Dashboard</option>
-                <option value="Ramps">Ramps</option>
-                <option value="SDK">SDK</option>
-                <option value="Security">Security</option>
-                <option value="Snaps">Snaps</option>
-                <option value="Staking">Staking</option>
-                <option value="Swaps">Swaps</option>
-                <option value="Wallet">Wallet</option>
-                <option value="Wallet API">Wallet API</option>
-            </select>
-        </div>
-        <br><br>
-        
-        <div class="storage-mode">
-            <label for="storageModeLlm5">Storage Mode:</label>
-            <select id="storageModeLlm5" name="storageModeLlm5">
-                <option value="local">Local Storage</option>
-                <option value="gdrive">Google Drive</option>
-            </select>
-        </div>
-        <br><br>
-        <button type="submit">Run Comprehensive Analysis</button>
-    </form>
-    <div id="loaderLlm5" class="loader" style="display: none;">
-        <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Generator: Adobe Illustrator 29.4.0, SVG Export Plug-In . SVG Version: 9.03 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 142 136.878" style="enable-background:new 0 0 142 136.878;" xml:space="preserve">
-<path style="fill:#FF5C16;" d="M132.682,132.192l-30.583-9.106l-23.063,13.787l-16.092-0.007l-23.077-13.78l-30.569,9.106L0,100.801
-	l9.299-34.839L0,36.507L9.299,0l47.766,28.538h27.85L132.682,0l9.299,36.507l-9.299,29.455l9.299,34.839L132.682,132.192
-	L132.682,132.192z"/>
-<path style="fill:#FF5C16;" d="M9.305,0l47.767,28.558l-1.899,19.599L9.305,0z M39.875,100.814l21.017,16.01l-21.017,6.261
-	C39.875,123.085,39.875,100.814,39.875,100.814z M59.212,74.345l-4.039-26.174L29.317,65.97l-0.014-0.007v0.013l0.08,18.321
-	l10.485-9.951L59.212,74.345L59.212,74.345z M132.682,0L84.915,28.558l1.893,19.599L132.682,0z M102.113,100.814l-21.018,16.01
-	l21.018,6.261V100.814z M112.678,65.975h0.007H112.678v-0.013l-0.006,0.007L86.815,48.171l-4.039,26.174h19.336l10.492,9.95
-	C112.604,84.295,112.678,65.975,112.678,65.975z"/>
-<path style="fill:#E34807;" d="M39.868,123.085l-30.569,9.106L0,100.814h39.868C39.868,100.814,39.868,123.085,39.868,123.085z
-	 M59.205,74.338l5.839,37.84l-8.093-21.04L29.37,84.295l10.491-9.956h19.344L59.205,74.338z M102.112,123.085l30.57,9.106
-	l9.299-31.378h-39.869C102.112,100.814,102.112,123.085,102.112,123.085z M82.776,74.338l-5.839,37.84l8.092-21.04l27.583-6.843
-	l-10.498-9.956H82.776V74.338z"/>
-<path style="fill:#FF8D5D;" d="M0,100.801l9.299-34.839h19.997l0.073,18.327l27.584,6.843l8.092,21.039l-4.16,4.633l-21.017-16.01H0
-	V100.801z M141.981,100.801l-9.299-34.839h-19.998l-0.073,18.327l-27.582,6.843l-8.093,21.039l4.159,4.633l21.018-16.01h39.868
-	V100.801z M84.915,28.538h-27.85l-1.891,19.599l9.872,64.013h11.891l9.878-64.013L84.915,28.538z"/>
-<path style="fill:#661800;" d="M9.299,0L0,36.507l9.299,29.455h19.997l25.87-17.804L9.299,0z M53.426,81.938h-9.059l-4.932,4.835
-	l17.524,4.344l-3.533-9.186V81.938z M132.682,0l9.299,36.507l-9.299,29.455h-19.998L86.815,48.158L132.682,0z M88.568,81.938h9.072
-	l4.932,4.841l-17.544,4.353l3.54-9.201V81.938z M79.029,124.385l2.067-7.567l-4.16-4.633h-11.9l-4.159,4.633l2.066,7.567"/>
-<path style="fill:#C0C4CD;" d="M79.029,124.384v12.495H62.945v-12.495L79.029,124.384L79.029,124.384z"/>
-<path style="fill:#E7EBF6;" d="M39.875,123.072l23.083,13.8v-12.495l-2.067-7.566C60.891,116.811,39.875,123.072,39.875,123.072z
-	 M102.113,123.072l-23.084,13.8v-12.495l2.067-7.566C81.096,116.811,102.113,123.072,102.113,123.072z"/>
-</svg>
-    </div>
-    <!-- Progress Bar and Tally Area -->
-    <div id="progressContainerLlm5" style="margin-top: 15px; display: none;">
-        <div id="progressBarLlm5" style="width: 0%; height: 24px; background-color: var(--metamask-orange); border-radius: 4px; text-align: center; line-height: 24px; color: white; font-weight: bold;">0%</div>
-    </div>
-    <div id="progressTallyLlm5" style="margin-top: 10px; font-size: 0.9em; color: var(--metamask-text-medium);"></div>
-    <!-- End Progress Bar and Tally Area -->
-    <div id="statusMessageLlm5" style="margin-top: 20px;"></div>
-    <div id="fileLinksLlm5" style="margin-top: 10px;"></div>
-  </div>
-
-  <script src="/static/script.js"></script>
+  <!-- Moved script.js to the end to ensure DOM is loaded before execution -->
+  <script src="script.js"></script>
 </body>
-
 </html>
 
-
-
-
-    
