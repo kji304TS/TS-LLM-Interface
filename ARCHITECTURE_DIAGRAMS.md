@@ -1,6 +1,6 @@
 # 🏗️ ibuddy Architecture Diagrams
 
-This document contains visual dependency maps for the ibuddy TS-LLM-Interface project.
+This document contains visual dependency maps for ibuddy2.0.
 
 ## 📋 Table of Contents
 1. [Current Development Architecture](#current-development-architecture)
