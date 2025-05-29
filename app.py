@@ -14,6 +14,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 import asyncio
 from utils.s3_uploader import upload_file_to_s3
+import boto3
+from typing import Optional
 
 
 # --- Import GDrive uploader ---
@@ -449,10 +451,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @app.post("/upload-to-s3/")
-async def upload_to_s3_endpoint(filename: str):
+def upload_to_s3_endpoint(filename: str):
     s3_key = f"uploads/{filename}"
     file_path = f"output_files/{filename}"
-    s3_url = await upload_file_to_s3(file_path, s3_key)
+    s3_url = upload_file_to_s3(file_path, s3_key)
     if s3_url:
         return {"status": "success", "s3_url": s3_url}
     else:

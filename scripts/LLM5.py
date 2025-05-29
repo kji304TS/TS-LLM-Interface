@@ -1189,16 +1189,69 @@ async def main_function(
         try:
             if target_team_name and target_product_area_name and target_product_area_name != "ALL_AREAS":
                 logger.info(f"Generating targeted report for team '{target_team_name}' and product area '{target_product_area_name}'")
-                # ... existing targeted report generation code ...
-            elif target_team_name: 
+                team_convs = team_grouped_conversations.get(target_team_name, [])
+                df = _generate_scoped_product_area_files(
+                    team_convs,
+                    target_product_area_name,
+                    target_team_name,
+                    start_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                    end_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                    all_generated_files
+                )
+                processed_counts["targeted_team_product_area_files"] += 1 if df is not None else 0
+            elif target_team_name:
                 logger.info(f"Generating team-specific reports for '{target_team_name}'")
-                # ... existing team report generation code ...
-            elif target_product_area_name and target_product_area_name != "ALL_AREAS": 
+                team_convs = team_grouped_conversations.get(target_team_name, [])
+                for product_area in CATEGORY_HEADERS.keys():
+                    df = _generate_scoped_product_area_files(
+                        team_convs,
+                        product_area,
+                        target_team_name,
+                        start_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                        end_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                        all_generated_files
+                    )
+                    processed_counts["team_specific_product_area_files"] += 1 if df is not None else 0
+                # Team End of Shift report
+                team_report_path, _ = generate_team_end_of_shift_report(
+                    target_team_name, team_convs,
+                    start_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                    end_date_str.replace("-", "").replace(" ", "_").replace(":", "")
+                )
+                all_generated_files.append(team_report_path)
+                processed_counts["team_eos_reports_generated"] += 1
+            elif target_product_area_name and target_product_area_name != "ALL_AREAS":
                 logger.info(f"Generating product area report for '{target_product_area_name}'")
-                # ... existing product area report generation code ...
+                df = _generate_scoped_product_area_files(
+                    conversations,
+                    target_product_area_name,
+                    "GLOBAL",
+                    start_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                    end_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                    all_generated_files
+                )
+                processed_counts["global_product_area_files"] += 1 if df is not None else 0
             else:
                 logger.info("Generating full global reports")
-                # ... existing global report generation code ...
+                all_product_data = {}
+                for product_area in CATEGORY_HEADERS.keys():
+                    df = _generate_scoped_product_area_files(
+                        conversations,
+                        product_area,
+                        "GLOBAL",
+                        start_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                        end_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                        all_generated_files
+                    )
+                    all_product_data[product_area] = {"dataframe": df}
+                    processed_counts["global_product_area_files"] += 1 if df is not None else 0
+                # End of Shift report
+                eos_report_path = generate_end_of_shift_report(
+                    all_product_data,
+                    start_date_str.replace("-", "").replace(" ", "_").replace(":", ""),
+                    end_date_str.replace("-", "").replace(" ", "_").replace(":", "")
+                )
+                all_generated_files.append(eos_report_path)
         except Exception as e:
             error_msg = f"Error generating reports: {str(e)}"
             logger.error(error_msg)
