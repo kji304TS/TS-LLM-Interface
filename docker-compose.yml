@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for development
+      - ./scripts:/app/scripts
+      - ./utils:/app/utils
+      - ./static:/app/static
+      - ./app.py:/app/app.py
+      - ./index.html:/app/index.html
+      - ./script.js:/app/script.js
+      - ./style.css:/app/style.css
+      # Mount output directories
+      - ./output_files:/app/output_files
+      - ./Outputs:/app/Outputs
+    environment:
+      # These will be loaded from .env file automatically
+      - INTERCOM_PROD_KEY=${INTERCOM_PROD_KEY}
+      - GOOGLE_CREDENTIALS_JSON=${GOOGLE_CREDENTIALS_JSON}
+      - GDRIVE_FOLDER_ID=${GDRIVE_FOLDER_ID}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      # Add other Slack channel IDs as needed
+    env_file:
+      - .env
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload 

@@ -10,10 +10,13 @@ import traceback
 import importlib
 import zipfile
 import io
+import logging
+from logging.handlers import RotatingFileHandler
+import asyncio
 
 
 # --- Import GDrive uploader --- 
-from utils.gdrive_uploader import upload_file_to_drive
+# Removed: from utils.gdrive_uploader import upload_file_to_drive
 from utils.time_utils import calculate_dates_from_preset # New import
 from utils.intercom_team_fetcher import get_intercom_teams # Import for fetching teams
 
@@ -21,7 +24,22 @@ from utils.intercom_team_fetcher import get_intercom_teams # Import for fetching
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, timezone
 from contextlib import asynccontextmanager
-import asyncio # For async sleep in scheduler if needed, and for lifespan
+
+# --- Helper function for date ranges ---
+def get_date_range_from_preset(timeframe_preset: str):
+    """Calculate start and end dates based on a timeframe preset."""
+    return calculate_dates_from_preset(timeframe_preset)
+
+def get_date_range(start_date: str | None, end_date: str | None):
+    """Return start and end dates, ensuring they are not None."""
+    if start_date and end_date:
+        return start_date, end_date
+    now = datetime.now(timezone.utc)
+    if not start_date:
+        start_date = (now - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M")
+    if not end_date:
+        end_date = now.strftime("%Y-%m-%d %H:%M")
+    return start_date, end_date
 
 # --- Import the specific main_function from LLM5 for the scheduled task AND direct call debugging ---
 try:
@@ -40,7 +58,6 @@ def scheduled_llm5_job():
     """Defines the job to be run by the scheduler."""
     print(f"⏰ [{datetime.now(timezone.utc)}] Running scheduled LLM5 task...")
     try:
-        # Calculate date range for the last 8 hours
         end_date_dt = datetime.now(timezone.utc)
         start_date_dt = end_date_dt - timedelta(hours=8)
         
@@ -50,20 +67,31 @@ def scheduled_llm5_job():
         print(f"🗓️  Scheduled task for period: {start_date_str} to {end_date_str}")
 
         if llm5_main_function_direct:
-            # Run the LLM5 script's main function
-            # We might want to make upload_to_gdrive configurable here too, e.g., via env var
-            result = llm5_main_function_direct(
-                start_date_str=start_date_str,
-                end_date_str=end_date_str,
-                upload_to_gdrive=True,  # Or False, or from config
-                send_to_slack=True      # Ensure Slack notifications are enabled
-            )
-            print(f"✅ Scheduled LLM5 task completed. Result: {result.get('message', 'No message')}")
+            try:
+                result = asyncio.run(llm5_main_function_direct(
+                    start_date_str=start_date_str,
+                    end_date_str=end_date_str,
+                    # upload_to_gdrive=True, # Removed GDrive functionality
+                    send_to_slack=True,
+                    target_team_name=None, 
+                    target_product_area_name=None
+                ))
+                print(f"✅ Scheduled LLM5 task completed. Result: {result.get('message', 'No message')}")
+            except RuntimeError as e:
+                if "cannot be called from a running event loop" in str(e):
+                    print(f"❌ Error in scheduled LLM5 task: Attempted to call asyncio.run from within a running loop. Details: {e}")
+                    print("   Investigate if llm5_main_function or its sub-calls are mismanaging asyncio loops.")
+                else:
+                    print(f"❌ Runtime Error during scheduled LLM5 task: {e}")
+                    traceback.print_exc()
+            except Exception as e:
+                print(f"❌ General Error during scheduled LLM5 task: {e}")
+                traceback.print_exc()
         else:
             print("❌ llm5_main_function_direct not available. Scheduled task cannot run.")
 
     except Exception as e:
-        print(f"❌ Error during scheduled LLM5 task: {e}")
+        print(f"❌ Error during scheduled LLM5 task: {e}") # Outer exception for date calculation etc.
         traceback.print_exc()
 
 # --- FastAPI Lifespan for Scheduler ---
@@ -71,10 +99,7 @@ def scheduled_llm5_job():
 async def lifespan(app: FastAPI):
     print("🚀 FastAPI app starting up...")
     if llm5_main_function_direct:
-        # Add job to scheduler - runs every 8 hours
-        # For testing, you might want a shorter interval initially, e.g., minutes=1
         scheduler.add_job(scheduled_llm5_job, 'interval', hours=8, id="llm5_8hr_report")
-        # scheduler.add_job(scheduled_llm5_job, 'interval', minutes=1, id="llm5_test_report") # For quick testing
         print("⏳ LLM5 reporting job scheduled to run every 8 hours.")
     else:
         print("🚫 LLM5 reporting job NOT scheduled because main_function_direct could not be imported.")
@@ -89,21 +114,23 @@ async def lifespan(app: FastAPI):
             scheduler.shutdown()
             print("Scheduler shut down.")
 
-# Pass lifespan to FastAPI app
 app = FastAPI(lifespan=lifespan)
 
-# Updated Data model for request
 class ScriptRequest(BaseModel):
     script_name: str
     start_date: str | None = None 
     end_date: str | None = None   
     timeframe_preset: str | None = None 
-    upload_to_gdrive: bool = False
+    # upload_to_gdrive: bool = False # Removed GDrive functionality
     target_team: str | None = None
     target_product_area: str | None = None
 
 class ZipRequest(BaseModel):
     filenames: list[str]
+
+class SlackScraperRequest(BaseModel):
+    channel_id: str
+    hours_back: int = 24
 
 # --- VERY BASIC TEST ROUTES (TEMPORARY - CAN BE REMOVED LATER) ---
 @app.get("/api/teams-test")
@@ -127,63 +154,61 @@ async def test_post_new_endpoint(data: ScriptRequest): # Can reuse ScriptRequest
 
 # --- END OF TEST ROUTES ---
 
-# CORS setup 
+# Default allowed origins for development
+DEFAULT_ALLOWED_ORIGINS = [
+    "https://kji304ts.github.io",
+    "http://192.168.0.27:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://08dd-184-97-144-83.ngrok-free.app",  # TODO: Remove after AWS deployment
+    # "https://your-aws-url.amazonaws.com",  # TODO: Add your AWS URL here after deployment
+]
+
+# Get allowed origins from environment variable or use defaults
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '').split(',')
+allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]  # Clean empty strings
+if not allowed_origins:  # If no origins specified in env, use defaults
+    allowed_origins = DEFAULT_ALLOWED_ORIGINS
+
+# CORS setup with both security and development flexibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://kji304ts.github.io", 
-        "http://192.168.0.27:8080",  
-        "http://localhost:8080",     
-        "http://127.0.0.1:8080",   
-        "http://localhost", 
-        "http://127.0.0.1"
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=['GET', 'POST'],  # Restrict to only needed methods
+    allow_headers=['Content-Type', 'Authorization'],  # Restrict to only needed headers
 )
 
 @app.post("/run-script/")
-def run_script(data: ScriptRequest):
-    actual_start_date = data.start_date
-    actual_end_date = data.end_date
-    source_of_dates = "direct input" # Assume direct input initially
-
-    if data.script_name == "LLM5.py" and data.timeframe_preset:
-        print(f"⏳ Calculating dates for LLM5.py using preset: {data.timeframe_preset}")
-        actual_start_date, actual_end_date = calculate_dates_from_preset(data.timeframe_preset)
-        print(f"   Calculated Start (from preset): {actual_start_date}, End (from preset): {actual_end_date}")
-        source_of_dates = "preset"
+async def run_script(data: ScriptRequest):
+    """Run a script with the provided parameters."""
+    print(f"🚀 Received request to run {data.script_name}")
     
-    if source_of_dates == "direct input" and actual_start_date and actual_end_date:
-        try:
-            current_year = datetime.now().year
-            dt_start_original = datetime.strptime(actual_start_date, "%Y-%m-%d %H:%M")
-            if dt_start_original.year != current_year:
-                new_start_dt = dt_start_original.replace(year=current_year)
-                print(f"   Overriding year for start_date. Original: {actual_start_date}, New: {new_start_dt.strftime('%Y-%m-%d %H:%M')}")
-                actual_start_date = new_start_dt.strftime("%Y-%m-%d %H:%M")
-            dt_end_original = datetime.strptime(actual_end_date, "%Y-%m-%d %H:%M")
-            if dt_end_original.year != current_year:
-                new_end_dt = dt_end_original.replace(year=current_year)
-                print(f"   Overriding year for end_date. Original: {actual_end_date}, New: {new_end_dt.strftime('%Y-%m-%d %H:%M')}")
-                actual_end_date = new_end_dt.strftime("%Y-%m-%d %H:%M")
-        except ValueError as e:
-            print(f"   Warning: Could not parse/adjust input dates to current year: {e}. Using dates as provided by user.")
-    
-    if not actual_start_date or not actual_end_date:
-        return {"output": "Failed: Valid start and end dates could not be determined. Please check your input or preset.", "error": "Missing or invalid date parameters", "status": "failed"}
+    # Get actual dates based on timeframe preset or provided dates
+    actual_start_date, actual_end_date = get_date_range(data.start_date, data.end_date)
+    if data.timeframe_preset:
+        actual_start_date, actual_end_date = get_date_range_from_preset(data.timeframe_preset)
+        print(f"📅 Using preset timeframe: {data.timeframe_preset}")
+        print(f"   Start: {actual_start_date}")
+        print(f"   End: {actual_end_date}")
+    else:
+        print(f"📅 Using provided dates:")
+        print(f"   Start: {actual_start_date}")
+        print(f"   End: {actual_end_date}")
 
-    print(f"✅ Received request to run: {data.script_name}")
-    print(f"   Using effective Start Date: {actual_start_date}, End Date: {actual_end_date}")
-    print(f"📁 Storage mode: {'Google Drive' if data.upload_to_gdrive else 'Local'}")
-    if data.script_name == "LLM5.py":
+    if data.target_team or data.target_product_area:
         print(f"🎯 Targeting - Team: {data.target_team or 'All'}, Product Area: {data.target_product_area or 'All'}")
 
     try:
         print("🧪 Checking environment variables...")
-        folder_id = os.getenv("GDRIVE_FOLDER_ID")
-        print(f"🔍 GDRIVE_FOLDER_ID loaded: {folder_id if folder_id else '❌ MISSING'}")
+        # folder_id = os.getenv("GDRIVE_FOLDER_ID") # Removed GDrive functionality
+        # print(f"🔍 GDRIVE_FOLDER_ID loaded: {folder_id if folder_id else '❌ MISSING'}") # Removed GDrive functionality
         module_name = data.script_name.replace(".py", "")
         print(f"📦 Importing module: scripts.{module_name}")
         script_module = importlib.import_module(f"scripts.{module_name}")
@@ -191,43 +216,53 @@ def run_script(data: ScriptRequest):
             print("🚀 Executing main_function...")
             main_func_args = {
                 "start_date_str": actual_start_date,
-                "end_date_str": actual_end_date,
-                "upload_to_gdrive": data.upload_to_gdrive
+                "end_date_str": actual_end_date
+                # "upload_to_gdrive": data.upload_to_gdrive # Removed GDrive functionality
             }
             if data.script_name == "LLM5.py":
                 main_func_args["send_to_slack"] = True
                 main_func_args["target_team_name"] = data.target_team if data.target_team and data.target_team != "ALL_TEAMS" else None
                 main_func_args["target_product_area_name"] = data.target_product_area if data.target_product_area and data.target_product_area != "ALL_AREAS" else None
-            result = script_module.main_function(**main_func_args)
+            
+            print(f"🔧 Calling main_function with args: {main_func_args}")
+            result = await script_module.main_function(**main_func_args)
+            
+            print(f"🎁 Result from main_function: {result}")
+
             if isinstance(result, dict):
                 print(f"✅ Script completed: {result.get('message', 'No message')}")
                 processed_counts = result.get("processed_counts", {})
-                return {
+                response_data = {
                     "output": result.get("message", "Completed."),
                     "status": result.get("status", "success"),
                     "file": result.get("file"),
                     "local_files": result.get("local_files", []), 
-                    "gdrive_urls": result.get("gdrive_urls", []),
-                    "storage_mode": "gdrive" if data.upload_to_gdrive else "local",
+                    # "gdrive_urls": result.get("gdrive_urls", []), # Removed GDrive functionality
+                    "storage_mode": "local", # Defaulting to local
                     "processed_counts": processed_counts
                 }
+                print(f"📬 Sending response data (dict): {response_data}")
+                return response_data
             else:
                 print("✅ Script completed with no structured result.")
-                return {
+                response_data = {
                     "output": str(result),
                     "status": "success",
-                    "storage_mode": "gdrive" if data.upload_to_gdrive else "local"
+                    "storage_mode": "local" # Defaulting to local
                 }
+                print(f"📬 Sending response data (non-dict): {response_data}")
+                return response_data
         else:
             raise AttributeError(f"'main_function' not found in {data.script_name}")
     except Exception as e:
-        print("❌ Error while running script:")
-        traceback.print_exc()
-        return {
-            "output": f"Failed to run {data.script_name}", 
-            "error": str(e), 
-            "status": "failed"
-        }
+        logger.error(f"Error running script: {repr(e)}", exc_info=True) 
+        print(f"💥🚨 CAUGHT EXCEPTION IN /run-script/ 🚨💥")
+        import traceback
+        traceback.print_exc() 
+        raise HTTPException(
+            status_code=500,
+            detail=f"An internal server error occurred while trying to run {data.script_name}. Check server logs for details."
+        )
 
 # Restored functional /api/teams endpoint
 @app.get("/api/teams")
@@ -248,39 +283,34 @@ async def api_get_teams():
 
 @app.get("/download/{filename}")
 async def download_file(filename: str):
-    # Sanitize filename to prevent directory traversal attacks
-    if ".." in filename or filename.startswith("/"):
-        raise HTTPException(status_code=400, detail="Invalid filename.")
+    # Normalize and validate path
+    safe_filename = os.path.normpath(filename)
+    if safe_filename.startswith('..') or safe_filename.startswith('/'):
+        raise HTTPException(status_code=400, detail="Invalid filename")
     
-    # --- MODIFIED: Search in multiple known output directories --- 
-    possible_base_dirs = [
-        "output_files", 
-        "Outputs", 
-        os.path.join("Outputs", "team_reports") 
-    ]
-
-    file_path_to_serve = None
-    for base_dir in possible_base_dirs:
-        potential_path = os.path.join(base_dir, filename)
+    # Whitelist of allowed directories
+    allowed_dirs = {
+        "output_files": "output_files",
+        "Outputs": "Outputs",
+        "team_reports": os.path.join("Outputs", "team_reports")
+    }
+    
+    file_path = None
+    for dir_name, dir_path in allowed_dirs.items():
+        potential_path = os.path.join(dir_path, safe_filename)
         if os.path.exists(potential_path) and os.path.isfile(potential_path):
-            file_path_to_serve = potential_path
-            break # Found the file
-    # --- END MODIFICATION ---
+            file_path = potential_path
+            break
 
-    if not file_path_to_serve:
-        print(f"❌ File not found for download in any known directory: {filename}")
-        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
-    
-    # if not os.path.isfile(file_path_to_serve): # This check is now implicitly handled by the loop
-    #     print(f"❌ Path is not a file for download: {file_path_to_serve}")
-    #     raise HTTPException(status_code=400, detail=f"Path is not a file: {filename}")
+    if not file_path:
+        logger.warning(f"File not found: {filename}")
+        raise HTTPException(status_code=404, detail="File not found")
 
-    print(f"🔽 Preparing download for: {file_path_to_serve}")
     return FileResponse(
-        path=file_path_to_serve, 
-        filename=filename, 
+        path=file_path,
+        filename=safe_filename,
         media_type='application/octet-stream',
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={safe_filename}"}
     )
 
 @app.post("/download-zip/")
@@ -325,6 +355,78 @@ async def download_zip(data: ZipRequest):
         headers={"Content-Disposition": f"attachment; filename={zip_filename}"}
     )
 
+@app.post("/slack/scrape-channel/")
+async def scrape_slack_channel(data: SlackScraperRequest):
+    """Scrape a Slack channel and generate an activity report"""
+    print(f"📊 Slack scraping request for channel: {data.channel_id}")
+    
+    try:
+        from utils.slack_scraper import SlackScraper
+        
+        scraper = SlackScraper()
+        end_date = datetime.now()
+        start_date = end_date - timedelta(hours=data.hours_back)
+        
+        # Generate report
+        report = scraper.generate_channel_report(data.channel_id, start_date, end_date)
+        
+        # Save report as JSON
+        from utils.storage_handler import storage
+        import json
+        
+        report_filename = f"slack_reports/channel_{data.channel_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        storage.save_file(
+            json.dumps(report, indent=2), 
+            report_filename
+        )
+        
+        # Format for Slack
+        formatted_report = scraper.format_report_for_slack(report)
+        
+        return {
+            "status": "success",
+            "report": report,
+            "formatted_message": formatted_report,
+            "report_file": report_filename
+        }
+        
+    except Exception as e:
+        print(f"❌ Error scraping Slack channel: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to scrape Slack channel: {str(e)}")
+
+@app.get("/slack/list-channels/")
+async def list_slack_channels():
+    """List all available Slack channels the bot can access"""
+    try:
+        from utils.slack_scraper import SlackScraper
+        
+        scraper = SlackScraper()
+        response = scraper.client.conversations_list(
+            types="public_channel,private_channel",
+            exclude_archived=True
+        )
+        
+        channels = []
+        for channel in response["channels"]:
+            if channel.get("is_member", False):  # Only channels the bot is in
+                channels.append({
+                    "id": channel["id"],
+                    "name": channel["name"],
+                    "is_private": channel.get("is_private", False),
+                    "num_members": channel.get("num_members", 0)
+                })
+        
+        return {
+            "status": "success",
+            "channels": channels,
+            "total": len(channels)
+        }
+        
+    except Exception as e:
+        print(f"❌ Error listing Slack channels: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list Slack channels: {str(e)}")
+
 # Serve static files (CSS, JS) from the 'static' sub-directory
 # A request to /static/style.css will serve the file static/style.css
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -333,3 +435,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=FileResponse)
 async def read_index_html():
     return FileResponse("index.html", media_type="text/html")
+
+# 1. Add proper logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        RotatingFileHandler('app.log', maxBytes=10000000, backupCount=5),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)

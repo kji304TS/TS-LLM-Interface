@@ -391,7 +391,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 1800); // Interval for simulated progress messages
 
         try {
-            const response = await fetch("/run-script/", {
+            // TODO: Update to AWS URL after deployment (replace localhost:8080)
+            const response = await fetch("http://localhost:8080/run-script/", {
                 method: 'POST',
                 mode: "cors",
                 headers: {
@@ -517,7 +518,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             console.log("Zipping files:", currentLocalFiles);
             try {
-                const response = await fetch("/download-zip/", {
+                // TODO: Update to AWS URL after deployment (replace localhost:8080)
+                const response = await fetch("http://localhost:8080/download-zip/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
