@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build: .
@@ -20,8 +18,6 @@ services:
     environment:
       # These will be loaded from .env file automatically
       - INTERCOM_PROD_KEY=${INTERCOM_PROD_KEY}
-      - GOOGLE_CREDENTIALS_JSON=${GOOGLE_CREDENTIALS_JSON}
-      - GDRIVE_FOLDER_ID=${GDRIVE_FOLDER_ID}
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       # Add other Slack channel IDs as needed
     env_file:

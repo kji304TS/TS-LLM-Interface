@@ -54,6 +54,8 @@ llm5Form.addEventListener('submit', async (event) => {
 
     const selectedTimeframe = document.getElementById('timeframeLlm5').value;
     const storageMode = document.getElementById('storageModeLlm5').value;
+    const team = document.getElementById("teamSelect").value;
+    const productArea = document.getElementById("productAreaSelect").value;
 
     if (!selectedTimeframe) {
         if (wittyMessageIntervalId) clearInterval(wittyMessageIntervalId);
@@ -69,7 +71,9 @@ llm5Form.addEventListener('submit', async (event) => {
     const requestData = {
         script_name: "LLM5.py",
         timeframe_preset: selectedTimeframe, 
-        upload_to_gdrive: storageMode === 'gdrive'
+        upload_to_gdrive: storageMode === 'gdrive',
+        target_team: team || null,
+        target_product_area: productArea || null,
     };
 
     currentSimulatedProgress = 5; // Initial small progress
@@ -160,8 +164,8 @@ llm5Form.addEventListener('submit', async (event) => {
         if (result.local_files && result.local_files.length > 0) { 
             linksHtml += "<h4>Generated Files (Local):</h4>";
             result.local_files.forEach(file => {
-                const fileName = file.split('/').pop().split('\\\\').pop(); 
-                linksHtml += `<div class="file-link">${fileName} (Check 'Outputs' or 'output_files')</div>`;
+                const fileName = file.split('/').pop().split('\\\\').pop();
+                linksHtml += `<a href="/download/${fileName}" target="_blank" class="file-link">${fileName}</a>`;
             });
         }
         if(fileLinksLlm5Div) fileLinksLlm5Div.innerHTML = linksHtml;

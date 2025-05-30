@@ -17,7 +17,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy the rest of the application code into the container
 COPY . .
@@ -29,4 +29,6 @@ EXPOSE 80
 # Command to run the application
 # We use 0.0.0.0 to make the app accessible from outside the container within the Docker network/ECS/EKS
 # For production, you might remove --reload and adjust workers as needed.
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80"] 
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80"]
+
+RUN python -m nltk.downloader punkt averaged_perceptron_tagger 

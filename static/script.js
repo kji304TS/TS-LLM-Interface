@@ -2,14 +2,15 @@
 function submitSelection(event) {
     event.preventDefault(); // Prevent form reload
 
-    const script = document.getElementById("scriptSelect").value;
+    const team = document.getElementById("teamSelect").value;
+    const productArea = document.getElementById("productAreaSelect").value;
     let startDate = document.getElementById("startDate").value; // raw value from datetime-local
     let endDate = document.getElementById("endDate").value;   // raw value from datetime-local
     const storageMode = document.getElementById("storageMode").value;
     const statusMessage = document.getElementById("statusMessage");
     const fileLinks = document.getElementById("fileLinks");
 
-    if (!script || !startDate || !endDate) {
+    if (!startDate || !endDate) {
         if (statusMessage) statusMessage.textContent = "⚠️ Please fill in all fields.";
         return;
     }
@@ -34,10 +35,11 @@ function submitSelection(event) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            script_name: script,
+            script_name: "LLM5.py",
             start_date: startDate,
             end_date: endDate,
-            upload_to_gdrive: storageMode === "gdrive"
+            target_team: team || null,
+            target_product_area: productArea || null
         })
     })
     .then(response => response.json())
@@ -62,7 +64,7 @@ function submitSelection(event) {
             } else if (data.file) { // Fallback for single 'file' property if present
                  linksHtml += `<h4>File:</h4><a href="${data.file}" target="_blank" class="file-link">📁 View File</a>`;
             }
-            fileLinks.innerHTML = linksHtml;
+            if (fileLinks) fileLinks.innerHTML = linksHtml;
 
         } else {
             if (statusMessage) statusMessage.textContent = `❌ ${data.error || data.output || "An error occurred"}`;
@@ -310,19 +312,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     llm5Form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
+        // Show spinner and reset ETA
+        const progressSpinner = document.getElementById('progressSpinner');
+        const etaDisplay = document.getElementById('etaDisplay');
+        if (progressSpinner) progressSpinner.style.display = 'block';
+        if (etaDisplay) etaDisplay.textContent = '';
+
         if(loaderLlm5Div) loaderLlm5Div.style.display = 'block';
         if(progressContainerLlm5) progressContainerLlm5.style.display = 'block';
         if(progressBarLlm5) {
             progressBarLlm5.style.width = '0%';
             progressBarLlm5.textContent = '0%';
         }
-        if(progressTallyLlm5) progressTallyLlm5.textContent = 'Initializing...';
+        if(progressTallyLlm5) progressTallyLlm5.textContent = 'Preparing to analyze...';
         if(fileLinksLlm5Div) fileLinksLlm5Div.innerHTML = ''; // Clear previous links
         if(statusMessageLlm5Div) statusMessageLlm5Div.textContent = ''; // Clear previous status
 
-        showWittyMessage(); 
         if (wittyMessageIntervalId) clearInterval(wittyMessageIntervalId);
-        wittyMessageIntervalId = setInterval(showWittyMessage, 2500);
+        if (simulatedProgressIntervalId) clearInterval(simulatedProgressIntervalId);
+        
+        showWittyMessage(); 
+        wittyMessageIntervalId = setInterval(showWittyMessage, 2500); // Slightly longer interval for witty messages
 
         const selectedTimeframe = document.getElementById('timeframeLlm5').value;
         const storageMode = document.getElementById('storageModeLlm5').value;
@@ -349,21 +359,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         let currentSimulatedProgress = 0;
-        const maxSimulatedProgress = 95; 
-        // --- NEW: More granular progress stages ---
-        const progressStages = [
-            { percent: 0, message: `Running for: ${selectedTimeframe}, Team: ${targetTeam}, Area: ${targetProductArea}` },
-            { percent: 5, message: "Initializing analysis..." },
-            { percent: 15, message: "Fetching Intercom team data..." },
-            { percent: 25, message: "Searching conversations (this may take a moment)..." },
-            { percent: 50, message: "Processing fetched conversations..." },
-            { percent: 70, message: "Analyzing data and generating insights..." },
-            { percent: 85, message: "Creating report files..." },
-            { percent: 90, message: storageMode === 'gdrive' ? "Preparing GDrive upload..." : "Finalizing local files..." },
-            { percent: maxSimulatedProgress, message: "Finalizing..." }
-        ];
-        let currentStageIndex = 0;
-        // --- END NEW ---
+        const maxSimulatedProgress = 90; // Don't let simulation exceed this before backend responds
+        const progressIncrement = 5; // How much to increment progress bar per step
+        let simulatedProductAreas = 0;
+        let simulatedTeamReports = 0;
+        const estimatedTotalProductAreas = 12; // Based on CATEGORY_HEADERS
+        const estimatedTotalTeamReports = 5;  // Based on your team setup
+        let etaSeconds = 60; // Default ETA in seconds
+        let etaRemaining = etaSeconds;
+        if (etaDisplay) etaDisplay.textContent = `Estimated time remaining: ${etaRemaining}s`;
+        const etaInterval = setInterval(() => {
+            etaRemaining--;
+            if (etaRemaining > 0 && etaDisplay) {
+                etaDisplay.textContent = `Estimated time remaining: ${etaRemaining}s`;
+            } else if (etaDisplay) {
+                etaDisplay.textContent = `Almost done...`;
+                clearInterval(etaInterval);
+            }
+        }, 1000);
 
         if(progressBarLlm5) {
              progressBarLlm5.style.width = currentSimulatedProgress + '%'; 
@@ -374,20 +387,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (simulatedProgressIntervalId) clearInterval(simulatedProgressIntervalId);
         simulatedProgressIntervalId = setInterval(() => {
-            if (currentStageIndex < progressStages.length -1) { // Stop before the absolute final simulated stage
-                currentStageIndex++;
-                currentSimulatedProgress = progressStages[currentStageIndex].percent;
+            if (currentSimulatedProgress < maxSimulatedProgress) {
+                currentSimulatedProgress += progressIncrement;
                 if(progressBarLlm5) {
                     progressBarLlm5.style.width = currentSimulatedProgress + '%';
                     progressBarLlm5.textContent = currentSimulatedProgress + '%';
                 }
                 if(progressTallyLlm5) {
-                    progressTallyLlm5.textContent = progressStages[currentStageIndex].message;
+                    progressTallyLlm5.textContent = `Processing... ${Math.round(currentSimulatedProgress)}% complete`;
                 }
             } else {
                 if (simulatedProgressIntervalId) clearInterval(simulatedProgressIntervalId); 
             }
-        // }, 1000); // Faster simulation interval - Adjusted to be slightly longer for more distinct messages
         }, 1800); // Interval for simulated progress messages
 
         try {
@@ -401,7 +412,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify(requestData),
             });
 
-            if (simulatedProgressIntervalId) clearInterval(simulatedProgressIntervalId); // Stop simulation once response starts processing
+            // Hide spinner and ETA when done
+            if (progressSpinner) progressSpinner.style.display = 'none';
+            if (etaDisplay) etaDisplay.textContent = '';
+            clearInterval(etaInterval);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
@@ -495,6 +509,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(fileLinksLlm5Div) fileLinksLlm5Div.innerHTML = linksHtml;
 
         } catch (error) {
+            // Hide spinner and ETA on error
+            if (progressSpinner) progressSpinner.style.display = 'none';
+            if (etaDisplay) etaDisplay.textContent = '';
+            clearInterval(etaInterval);
             if(statusMessageLlm5Div) {
                 statusMessageLlm5Div.textContent = `❌ Client-side Error: ${error.message}`;
                 statusMessageLlm5Div.className = 'error';

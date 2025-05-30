@@ -42,8 +42,6 @@ try:
     for resource in REQUIRED_NLTK_RESOURCES:
         nltk.data.find(f"tokenizers/{resource}" if resource == 'punkt' else f"taggers/{resource}")
     print("✅ NLTK resources (punkt, averaged_perceptron_tagger) found.")
-except nltk.downloader.DownloadError as e:
-    print(f"⚠️ NLTK DownloadError ({e}). This might be an issue if resources are truly missing and download fails.")
 except LookupError:
     print("ℹ️ NLTK resources not found, attempting to download...")
     try:
@@ -354,24 +352,19 @@ async def search_conversations_async(
 
     return all_conversations
 
-def search_conversations(
+# --- Make search_conversations fully async for FastAPI compatibility ---
+async def search_conversations(
     start_date_str: str, 
     end_date_str: str, 
     product_area_filter_value: str | None = None,
     team_filter_details: dict | None = None
 ):
-    """Synchronous wrapper for async search_conversations."""
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(search_conversations_async(
+    return await search_conversations_async(
         start_date_str, 
         end_date_str, 
         product_area_filter_value,
         team_filter_details
-    ))
+    )
 
 # ✅ Fetch full conversation details
 async def get_intercom_conversation_async(session, conversation_id):
@@ -1134,7 +1127,7 @@ async def main_function(
         logger.info("=== Fetching Conversations ===")
         try:
             logger.info("Starting conversation search...")
-            conversations = search_conversations(
+            conversations = await search_conversations(
                 start_date_str, 
                 end_date_str, 
                 product_area_filter_value=product_area_api_filter_value,
