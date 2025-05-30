@@ -3,47 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <title>Intercom LLM Buddy</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="icon" type="image/svg+xml" href="/static/mmicon.svg">
+  <title>IBuddy</title>
 </head>
 <body>
-  <div class=banner>
-    <img src="iBuddyLogo.png" alt="Intercom Logo" class="header-image" />
+  <div class="banner">
+    <img src="/static/mmicon.svg" alt="MetaMask Logo" class="header-image" style="max-width: 40px; height: 40px;" />
     <span>
-      iBuddy
+      Intercom Buddy (IBuddy2.0)
     </span>
   </div>
-  <form id="main-form" action="/run" method="POST">
-    <div> <label for="script_name">MetaMask Area:</label></div>
-    <select id="script_name" name="script_name" required style="width:323px;">
-      <option value="" selected disabled hidden>-select-</option>
-      <option value="ramps5.py">Ramps</option>
-      <option value="bridges5.py">Bridges</option>
-      <option value="wallet5.py">Wallet</option>
-      <option value="card5.py">Card</option>
-      <option value="staking5.py">Staking</option>
-      <option value="swaps5.py">Swaps</option>
-      <option value="dashboard5.py">Dashboard</option>
-      <option value="snaps5.py">Snaps</option>
-      <option value="sdk5.py">SDK</option>
-      <option value="security5.py">Security</option>
-      <option value="walletapi5.py">Wallet API</option>
+
+  <!-- Updated Form with ID for JavaScript -->
+  <form id="scriptForm">
+    <label for="teamSelect">Team:</label>
+    <select id="teamSelect" name="teamSelect">
+      <option value="">All Teams</option>
+      <option value="MetaMask TS">MetaMask TS</option>
+      <option value="MetaMask HD UST">MetaMask HD UST</option>
+      <option value="Card">Card</option>
+      <option value="Portfolio">Portfolio</option>
+      <option value="Solana">Solana</option>
+      <option value="MetaMask HD General">MetaMask HD General</option>
+      <option value="Unclassified">Unclassified</option>
     </select>
     <br><br>
-    <div> <label for="start_date">Start Date:</label></div>
-    <input type="date" id="start_date" name="start_date" required style="width:300px;">
+    <label for="productAreaSelect">Product Area:</label>
+    <select id="productAreaSelect" name="productAreaSelect">
+      <option value="">All Product Areas</option>
+      <option value="Ramps">Ramps</option>
+      <option value="Bridges">Bridges</option>
+      <option value="Wallet">Wallet</option>
+      <option value="Card">Card</option>
+      <option value="Staking">Staking</option>
+      <option value="Swaps">Swaps</option>
+      <option value="Dashboard">Dashboard</option>
+      <option value="Snaps">Snaps</option>
+      <option value="SDK">SDK</option>
+      <option value="Security">Security</option>
+      <option value="Wallet API">Wallet API</option>
+      <option value="Portfolio">Portfolio</option>
+      <option value="Solana">Solana</option>
+    </select>
     <br><br>
-    <label for="end_date">End Date:</label>
-    <div><input type="date" id="end_date" name="end_date" required style="width:300px;"></div>
+    <label for="storageMode">Storage Mode:</label>
+    <select id="storageMode" name="storageMode">
+      <option value="local" selected>Local</option>
+      <option value="gdrive">Google Drive</option>
+    </select>
+    <input type="hidden" id="storageMode" name="storageMode" value="local">
+    <br><br>
+    <label for="startDate">Start Date & Time:</label>
+    <input type="text" id="startDate" name="startDate" placeholder="Select start date/time" required>
+    <br><br>
+    <label for="endDate">End Date & Time:</label>
+    <input type="text" id="endDate" name="endDate" placeholder="Select end date/time" required>
     <br><br>
     <button type="submit">Run</button>
-    <button type="button" class="clear" onclick="clearForm()">Clear</button>
   </form>
+
+  <div id="progressSpinner" style="display:none; text-align:center; margin-top:20px;">
+    <div class="spinner"></div>
+    <div id="etaDisplay" style="margin-top:10px; font-weight:bold;"></div>
+  </div>
+
+  <div id="statusMessage" style="margin-top: 20px; font-weight: bold;"></div>
+
+  <!-- Flatpickr JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- Moved script.js to the end to ensure DOM is loaded before execution -->
+  <script src="/static/script.js"></script>
   <script>
-    function clearForm() {
-      document.getElementById('main-form').reset();
-    }
+    flatpickr("#startDate", {
+      enableTime: true,
+      dateFormat: "Y-m-d H:i",
+      time_24hr: true
+    });
+    flatpickr("#endDate", {
+      enableTime: true,
+      dateFormat: "Y-m-d H:i",
+      time_24hr: true
+    });
   </script>
+
+  <style>
+  .spinner {
+     position: relative;
+     width: 56px;
+     height: 56px;
+  }
+  .spinner::before,
+  .spinner::after {
+     content: '';
+     width: 100%;
+     height: 100%;
+     animation: spinner-rfi6tk 1s infinite linear;
+     box-sizing: border-box;
+     border: 11.2px solid rgba(71,75,255,0.1);
+     border-radius: 50%;
+     position: absolute;
+  }
+  .spinner::before {
+     animation-direction: reverse;
+     border-right-color: #474bff;
+     right: calc(50% - 5.6px);
+  }
+  .spinner::after {
+     border-left-color: #474bff;
+     left: calc(50% - 5.6px);
+  }
+  @keyframes spinner-rfi6tk {
+     0% {
+        transform: rotate(0deg);
+     }
+     50%, 100% {
+        transform: rotate(360deg);
+     }
+  }
+  </style>
 </body>
 </html>
 
