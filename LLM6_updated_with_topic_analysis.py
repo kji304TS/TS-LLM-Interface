@@ -25,7 +25,6 @@ GDRIVE_FOLDER_ID = os.getenv("GDRIVE_FOLDER_ID")
 INTERCOM_PROD_KEY = os.getenv("INTERCOM_PROD_KEY")
 
 CATEGORY_HEADERS = {
-    "Bridges": ["Bridge Issue"],
     "Card": [
         "MM Card Issue",
         "MM Card Partner issue",
@@ -56,7 +55,7 @@ CATEGORY_HEADERS = {
         "Staking Token Type",
         "Staking Platform",
     ],
-    "Swaps": ["Swaps issue"],
+    "Swaps": ["Swaps issue", "Bridge Issue"],
     "Wallet": ["Wallet issue"],
     "Wallet API": [],
 }
