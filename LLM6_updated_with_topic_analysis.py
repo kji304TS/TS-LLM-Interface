@@ -396,11 +396,12 @@ def analyze_xlsx_and_generate_insights(
     if issue_col is None:
         with open(insights_file, "w", encoding="utf-8") as f:
             f.write(
-                f"MetaMask {meta_mask_area} Support — Focused Issue Report\n"
+                f"📝 MetaMask {meta_mask_area} Support — Focused Issue Report\n"
                 f"Date Range: {_format_human_date_range(week_start_str, week_end_str)}\n"
-                f"Conversation Volume Analyzed: {len(df)} total\n\n"
+                f"Conversation Volume Analyzed: {len(df):,} total\n\n"
                 f"No issue taxonomy found for this area."
             )
+        print(f"Insights written: {insights_file}")
         return insights_file
 
     # Ensure combined_text column exists
@@ -427,28 +428,26 @@ def analyze_xlsx_and_generate_insights(
     total_area_rows = len(df)
     top_counts = issues_series.value_counts().head(3)
 
-    # Precompute combined text for later topical analysis
-    df["combined_text"] = df["summary"].fillna("") + " " + df["transcript"].fillna("")
-
     # Build report
     human_range = _format_human_date_range(week_start_str, week_end_str)
     lines = []
-    lines.append(f"MetaMask {meta_mask_area} Support — Focused Issue Report")
+    lines.append(f"📝 MetaMask {meta_mask_area} Support — Focused Issue Report")
     lines.append(f"Date Range: {human_range}")
-    lines.append(f"Conversation Volume Analyzed: {len(df)} total")
+    lines.append(f"Conversation Volume Analyzed: {len(df):,} total")
     lines.append(f"Focus: Top 3 {meta_mask_area} Issues by Volume")
     lines.append("")
 
-    lines.append("\U0001F4CA Top 3 " + f"{meta_mask_area} Issues")
-    lines.append("Issue\tConversations\t% of Total")
+    lines.append("📊 Top 3 " + f"{meta_mask_area} Issues")
+    # Standardize the table header label to "<Area> Issue"
+    lines.append(f"{meta_mask_area} Issue\tConversations\t% of Total")
     for issue, cnt in top_counts.items():
         pct = (cnt / total_area_rows * 100.0) if total_area_rows else 0.0
-        lines.append(f"{issue}\t{cnt}\t{pct:.1f}%")
+        lines.append(f"{issue}\t{cnt:,}\t{pct:.1f}%")
 
     # Deep dives per issue with dynamic topical phrases
     for issue, cnt in top_counts.items():
         lines.append("")
-        lines.append(f"\U0001F501 {issue} ({cnt} conversations)")
+        lines.append(f"\U0001F501 {issue} ({cnt:,} conversations)")
 
         # Build a boolean mask aligned to df.index
         issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
@@ -459,22 +458,37 @@ def analyze_xlsx_and_generate_insights(
         # Extract top phrases as proxy for "why" themes
         phrases = _top_phrases(issue_texts, max_phrases=5)
         if phrases:
+            # Present phrases as heading + short explanation pairs to mirror Wallet format
             for p in phrases:
-                lines.append(f"- {p}")
+                heading = p.title()
+                lines.append(f"{heading}")
+                lines.append("Observed frequently in user conversations.")
+                lines.append("")
+            if lines and lines[-1] == "":
+                lines.pop()
         else:
             lines.append("- No dominant topical phrases detected.")
 
-    # Optional: global keyword trend from summaries
-    if "summary" in df.columns and not df["summary"].dropna().empty:
-        words = (
-            df["summary"].astype(str).str.lower().str.split(expand=True).stack().dropna()
-        )
-        words = words[~words.isin(STOP_WORDS)]
-        if not words.empty:
-            top_words = words.value_counts().head(10)
-            lines.append("")
-            lines.append("Top keywords across summaries:")
-            lines.append(", ".join(list(top_words.index)))
+    # Add a generic Key Takeaways section for all areas (Wallet may still have curated content elsewhere)
+    lines.append("")
+    lines.append("🎯 Key Takeaways")
+    if not top_counts.empty:
+        # 1) Dominant issue
+        top_issue, top_cnt = next(iter(top_counts.items()))
+        top_pct = (top_cnt / total_area_rows * 100.0) if total_area_rows else 0.0
+        lines.append(f"✅ {top_issue} drives a significant share ({top_pct:.1f}%) of weekly volume.")
+
+        # 2) Thematic takeaways derived from phrases across the dominant issue
+        dominant_mask = df[issue_col].astype(str).str.strip().eq(str(top_issue)).reindex(df.index, fill_value=False)
+        dominant_texts = df.loc[dominant_mask, "combined_text"].astype(str).fillna("").tolist()
+        dominant_phrases = _top_phrases(dominant_texts, max_phrases=3)
+        if dominant_phrases:
+            lines.append(f"✅ Themes observed: {', '.join(dominant_phrases)}.")
+        else:
+            lines.append("✅ Users report recurring themes, suggesting targeted UX/content improvements could reduce volume.")
+
+        # 3) Guidance
+        lines.append("✅ Consider proactive guidance and clearer in-product messaging to reduce repeat issues.")
 
     with open(insights_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
