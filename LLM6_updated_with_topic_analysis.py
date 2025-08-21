@@ -26,7 +26,6 @@ INTERCOM_PROD_KEY = os.getenv("INTERCOM_PROD_KEY")
 
 # MetaMask Areas and their related subcategory columns captured in the XLSX output
 CATEGORY_HEADERS = {
-    "Bridges": ["Bridge Issue"],
     "Card": [
         "MM Card Issue",
         "MM Card Partner issue",
@@ -404,6 +403,18 @@ def analyze_xlsx_and_generate_insights(
             )
         return insights_file
 
+    # Ensure combined_text column exists
+    if "combined_text" not in df.columns:
+        if "summary" in df.columns:
+            summary_series = df["summary"].astype(str)
+        else:
+            summary_series = pd.Series([""] * len(df))
+        if "transcript" in df.columns:
+            transcript_series = df["transcript"].astype(str)
+        else:
+            transcript_series = pd.Series([""] * len(df))
+        df["combined_text"] = summary_series.fillna("") + " " + transcript_series.fillna("")
+
     # Normalize and filter the issue column
     issues_series = (
         df[issue_col]
@@ -439,8 +450,11 @@ def analyze_xlsx_and_generate_insights(
         lines.append("")
         lines.append(f"\U0001F501 {issue} ({cnt} conversations)")
 
-        issue_mask = df[issue_col].astype(str).str.strip() == str(issue)
-        issue_texts = df.loc[issue_mask, "combined_text"].dropna().astype(str).tolist()
+        # Build a boolean mask aligned to df.index
+        issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
+        issue_mask = issue_mask.reindex(df.index, fill_value=False)
+        issue_texts_series = df.loc[issue_mask, "combined_text"]
+        issue_texts = issue_texts_series.astype(str).fillna("").tolist()
 
         # Extract top phrases as proxy for "why" themes
         phrases = _top_phrases(issue_texts, max_phrases=5)
