@@ -445,23 +445,20 @@ def analyze_xlsx_and_generate_insights(
         lines.append(f"{issue}\t{cnt:,}\t{pct:.1f}%")
 
     # Deep dives per issue with dynamic topical phrases
+    all_issue_texts_for_takeaways = []
     for issue, cnt in top_counts.items():
         lines.append("")
-        lines.append(f"\U0001F501 {issue} ({cnt:,} conversations)")
-
-        # Build a boolean mask aligned to df.index
+        title = _title_with_emoji(meta_mask_area, issue)
+        lines.append(f"{title} ({cnt:,} conversations)")
         issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
         issue_mask = issue_mask.reindex(df.index, fill_value=False)
-        issue_texts_series = df.loc[issue_mask, "combined_text"]
-        issue_texts = issue_texts_series.astype(str).fillna("").tolist()
-
-        # Extract top phrases as proxy for "why" themes
+        issue_texts = df.loc[issue_mask, "combined_text"].astype(str).fillna("").tolist()
+        all_issue_texts_for_takeaways.extend(issue_texts)
         phrases = _top_phrases(issue_texts, max_phrases=5)
         if phrases:
-            # Present phrases as heading + short explanation pairs to mirror Wallet format
             for p in phrases:
                 heading = p.title()
-                lines.append(f"{heading}")
+                lines.append(heading)
                 lines.append("Observed frequently in user conversations.")
                 lines.append("")
             if lines and lines[-1] == "":
@@ -469,26 +466,19 @@ def analyze_xlsx_and_generate_insights(
         else:
             lines.append("- No dominant topical phrases detected.")
 
-    # Add a generic Key Takeaways section for all areas (Wallet may still have curated content elsewhere)
+    # Key takeaways (dynamic for all areas)
     lines.append("")
     lines.append("🎯 Key Takeaways")
     if not top_counts.empty:
-        # 1) Dominant issue
         top_issue, top_cnt = next(iter(top_counts.items()))
         top_pct = (top_cnt / total_area_rows * 100.0) if total_area_rows else 0.0
         lines.append(f"✅ {top_issue} drives a significant share ({top_pct:.1f}%) of weekly volume.")
-
-        # 2) Thematic takeaways derived from phrases across the dominant issue
-        dominant_mask = df[issue_col].astype(str).str.strip().eq(str(top_issue)).reindex(df.index, fill_value=False)
-        dominant_texts = df.loc[dominant_mask, "combined_text"].astype(str).fillna("").tolist()
-        dominant_phrases = _top_phrases(dominant_texts, max_phrases=3)
-        if dominant_phrases:
-            lines.append(f"✅ Themes observed: {', '.join(dominant_phrases)}.")
+        overall_phrases = _top_phrases(all_issue_texts_for_takeaways, max_phrases=4)
+        if overall_phrases:
+            lines.append(f"✅ Common themes: {', '.join(overall_phrases)}.")
         else:
             lines.append("✅ Users report recurring themes, suggesting targeted UX/content improvements could reduce volume.")
-
-        # 3) Guidance
-        lines.append("✅ Consider proactive guidance and clearer in-product messaging to reduce repeat issues.")
+    lines.append("✅ Consider proactive guidance and clearer in-product messaging to reduce repeat issues.")
 
     with open(insights_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
