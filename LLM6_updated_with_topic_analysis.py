@@ -116,8 +116,113 @@ STOP_WORDS = set(
         "im",
         "ive",
         "amp",
+        "•",
+        "–",
+        "—",
+        "-",
+        "_",
+        "meta",
+        "mask",
+        "metamask",
+        "customer",
+        "user",
+        "their",
+        "no",
+        "available",
+        "summary",
+        "question",
+        "agent",
     ]
 )
+
+
+TZ_NY = pytz.timezone("America/New_York")
+
+# ---------------------------
+# Area-specific curated themes
+# ---------------------------
+# Each theme: {"name": str, "explanation": str, "keywords": [regex strings]}
+GLOBAL_THEMES = [
+    {"name": "📩 Support Escalation Requests", "explanation": "Users wait on live agents to take action or confirm issues manually.", "keywords": [r"(live|real) ?agent", r"escalat", r"please\s+help", r"wait(ing)?\s+for\s+support"]},
+]
+
+AREA_THEMES = {
+    "Wallet": [
+        {"name": "🪙 Token Import Confusion", "explanation": "Users cannot see tokens due to missing contract imports or wrong network.", "keywords": [r"import token", r"contract address", r"add(ing)? token", r"wrong network", r"not\s+show(ing)? token"]},
+        {"name": "⛽ Gas & Transaction Failures", "explanation": "Transactions are stuck or fail due to low gas, congestion, or bad estimates.", "keywords": [r"gas", r"tx ?fail(ed|ure)?", r"transaction (stuck|pending)", r"insufficient.*(funds|gas)"]},
+        {"name": "🔐 Recovery Phrase Misunderstanding", "explanation": "Users expect to restore wallets without having saved their seed phrase.", "keywords": [r"seed phrase", r"recovery phrase", r"restore wallet", r"lost (seed|recovery)"]},
+        {"name": "🔀 Network/Chain Selection Issues", "explanation": "Confusion switching networks, especially BNB Smart Chain.", "keywords": [r"BNB", r"smart chain", r"switch network", r"wrong chain"]},
+        {"name": "🌍 Non-English Language Usage", "explanation": "Many requests are written in Spanish, Indonesian, or Portuguese.", "keywords": [r"espa[nñ]ol", r"indones(ian|ia)", r"portugu[eê]s", r"bahasa"]},
+    ] + GLOBAL_THEMES,
+    "Swaps": [
+        {"name": "⛽ Gas & Transaction Failures", "explanation": "Swaps fail or revert due to gas, slippage, or network conditions.", "keywords": [r"gas", r"revert", r"fail(ed)?", r"stuck"]},
+        {"name": "📉 Price Impact & Slippage", "explanation": "High price impact or slippage causes unexpected received amounts.", "keywords": [r"slippage", r"price impact", r"min(imum)? received", r"impact too (high|large)"]},
+        {"name": "🔒 Allowance/Approval Issues", "explanation": "Token approvals/allowances block or confuse swap execution.", "keywords": [r"allowance", r"approval", r"approve token", r"permit"]},
+        {"name": "🌉 Route/Bridge Limitations", "explanation": "Bridging paths or routes are unavailable or limited.", "keywords": [r"bridge", r"route", r"path", r"routing"]},
+    ] + GLOBAL_THEMES,
+    "Ramps": [
+        {"name": "🧾 KYC/Verification", "explanation": "Identity or verification steps block on/off-ramp flows.", "keywords": [r"KYC", r"verif(y|ication)", r"identity", r"document"]},
+        {"name": "💳 Payment/Bank Failures", "explanation": "Card/bank payments are declined or fail to settle.", "keywords": [r"card", r"bank", r"declin(ed|e)", r"payment (fail|error)"]},
+        {"name": "📈 On/Off-Ramp Limits", "explanation": "Transaction limits prevent completing the desired ramp amount.", "keywords": [r"limit", r"cap", r"threshold", r"maximum"]},
+    ] + GLOBAL_THEMES,
+    "Staking": [
+        {"name": "🔓 Withdrawals & Unstaking", "explanation": "Unstake/withdrawal delays or confusion about timelines and status.", "keywords": [r"unstak(e|ing)", r"withdraw(al)?", r"claim"]},
+        {"name": "💸 Rewards/APR Timing", "explanation": "Questions about reward accrual timing, APR changes, or visibility.", "keywords": [r"reward", r"APR", r"yield", r"interest"]},
+        {"name": "🧭 Validator/Delegation Issues", "explanation": "Selecting, changing, or interacting with validators is confusing.", "keywords": [r"validator", r"delegate", r"delegation"]},
+        {"name": "🤝 Third-Party Staking Providers", "explanation": "External staking provider issues impact user experience.", "keywords": [r"third party", r"provider", r"Lido|Rocket Pool|StakeWise|Figment"]},
+    ] + GLOBAL_THEMES,
+    "Card": [
+        {"name": "🧾 KYC/Verification", "explanation": "Identity or verification steps block card provisioning or use.", "keywords": [r"KYC", r"verif(y|ication)", r"identity", r"document"]},
+        {"name": "💳 Payment Failures", "explanation": "Transactions are declined or fail for card users.", "keywords": [r"declin(ed|e)", r"payment (fail|error)", r"card error"]},
+        {"name": "🏦 Partner/Issuer Issues", "explanation": "Card partner or issuer-specific service disruptions.", "keywords": [r"issuer", r"partner", r"processor", r"provider"]},
+    ] + GLOBAL_THEMES,
+    "Dashboard": [
+        {"name": "📊 Data/Balance Mismatch", "explanation": "Displayed balances or activity differ from on-chain reality.", "keywords": [r"balance", r"not\s+match", r"mismatch", r"wrong amount"]},
+        {"name": "🔄 Sync/Refresh Problems", "explanation": "Data takes too long to refresh or fails to sync.", "keywords": [r"refresh", r"sync", r"update", r"delay"]},
+    ] + GLOBAL_THEMES,
+    "SDK": [
+        {"name": "🧩 Integration Errors", "explanation": "Build-time or runtime errors during SDK integration.", "keywords": [r"build", r"compile", r"runtime", r"stack trace", r"exception"]},
+        {"name": "🔑 Auth/Permissions", "explanation": "Authentication or permission scopes fail or are unclear.", "keywords": [r"auth", r"permission", r"scope", r"token"]},
+    ] + GLOBAL_THEMES,
+    "Security": [
+        {"name": "🎣 Phishing/Scams", "explanation": "Users report phishing, scams, or suspicious dapps.", "keywords": [r"phish", r"scam", r"fraud", r"malicious"]},
+        {"name": "🔐 Recovery/Compromise", "explanation": "Accounts compromised or recovery concerns raised.", "keywords": [r"compromis", r"hack", r"recovery", r"seed phrase"]},
+    ] + GLOBAL_THEMES,
+    "Snaps": [
+        {"name": "🧩 Compatibility/Permissions", "explanation": "Snaps fail due to compatibility or permission prompts.", "keywords": [r"permission", r"compatib(le|ility)", r"snap (fail|error)"]},
+    ] + GLOBAL_THEMES,
+    "Wallet API": [
+        {"name": "🔑 Auth/Rate Limits", "explanation": "API authentication or rate limiting impacts usage.", "keywords": [r"rate limit", r"429", r"auth(entication)?", r"token"]},
+        {"name": "📡 Request/Response Errors", "explanation": "Unexpected API errors or schema mismatches.", "keywords": [r"400|401|403|404|500", r"schema", r"invalid", r"error response"]},
+    ] + GLOBAL_THEMES,
+}
+
+THEME_RECOMMENDATIONS = {
+    "🪙 Token Import Confusion": "Improve token detection and network hints; add auto-import suggestions post-swap.",
+    "⛽ Gas & Transaction Failures": "Provide clearer gas guidance and fallback strategies when estimates fail.",
+    "🔐 Recovery Phrase Misunderstanding": "Reinforce recovery responsibilities during onboarding and restore flows.",
+    "🔀 Network/Chain Selection Issues": "Add inline prompts when actions likely require a different network.",
+    "🌍 Non-English Language Usage": "Add localized guides and language-aware automated replies for top languages.",
+    "📉 Price Impact & Slippage": "Explain price impact up front and suggest safe slippage ranges.",
+    "🔒 Allowance/Approval Issues": "Surface allowance state and provide clear approval steps in-flow.",
+    "🌉 Route/Bridge Limitations": "Offer alternative routes or explain current routing limitations upfront.",
+    "🧾 KYC/Verification": "Preflight checks and clearer KYC status messaging to reduce drop-offs.",
+    "💳 Payment/Bank Failures": "Improve decline reason messaging and provide next-step guidance in-app.",
+    "📈 On/Off-Ramp Limits": "Show user-specific limits and eligibility criteria before order initiation.",
+    "🔓 Withdrawals & Unstaking": "Display realistic timelines and status for unstake/withdrawal stages.",
+    "💸 Rewards/APR Timing": "Explain reward accrual cadence and APR variability in-product.",
+    "🧭 Validator/Delegation Issues": "Guide validator selection and delegation changes with clearer UI steps.",
+    "🤝 Third-Party Staking Providers": "Link provider-specific status pages and constraints inside the flow.",
+    "📊 Data/Balance Mismatch": "Provide reconciliation tips and a quick refresh/sync action.",
+    "🔄 Sync/Refresh Problems": "Show last-sync timestamp and retry/backoff status visibly.",
+    "🧩 Integration Errors": "Expand SDK error docs with common fixes and code samples.",
+    "🔑 Auth/Permissions": "Clarify required scopes and token lifetimes with examples.",
+    "🎣 Phishing/Scams": "Embed anti-phishing education and quick-report flows.",
+    "🔐 Recovery/Compromise": "Provide immediate compromise guidance and revoke-approval steps.",
+    "🧩 Compatibility/Permissions": "Preflight required permissions and Snap compatibility checks.",
+    "🔑 Auth/Rate Limits": "Document rate limits and recommend pagination/backoff patterns.",
+    "📡 Request/Response Errors": "Include schema validators and example payloads in docs and tooling.",
+}
 
 
 def get_last_week_dates():
@@ -378,6 +483,33 @@ def _top_phrases(texts: List[str], max_phrases: int = 5) -> List[str]:
     return phrases
 
 
+def _score_themes(texts: List[str], area: str, max_themes: int = 5) -> List[tuple[str, int]]:
+    themes = AREA_THEMES.get(area, GLOBAL_THEMES)
+    scores = []
+    for theme in themes:
+        patt = re.compile("|".join(theme.get("keywords", [])), flags=re.IGNORECASE)
+        count = 0
+        for t in texts:
+            if not t:
+                continue
+            hits = len(patt.findall(t))
+            count += hits
+        if count > 0:
+            scores.append((theme["name"], count))
+    scores.sort(key=lambda x: x[1], reverse=True)
+    return scores[:max_themes]
+
+
+def _theme_details(area: str, theme_name: str) -> tuple[str, str]:
+    for theme in AREA_THEMES.get(area, GLOBAL_THEMES):
+        if theme["name"] == theme_name:
+            return theme["name"], theme.get("explanation", "")
+    for theme in GLOBAL_THEMES:
+        if theme["name"] == theme_name:
+            return theme["name"], theme.get("explanation", "")
+    return theme_name, "Observed frequently in user conversations."
+
+
 def analyze_xlsx_and_generate_insights(
     xlsx_file: str, meta_mask_area: str, week_start_str: str, week_end_str: str
 ) -> str:
@@ -385,9 +517,7 @@ def analyze_xlsx_and_generate_insights(
     df = pd.read_excel(xlsx_file)
     df.columns = df.columns.str.strip()
 
-    # Determine which column to treat as the primary issue taxonomy
     issue_col = _pick_primary_issue_column(df, meta_mask_area)
-
     insights_file = os.path.join(
         INSIGHTS_DIR,
         f"{meta_mask_area.lower()}_insights_{week_start_str}_to_{week_end_str}.txt",
@@ -404,19 +534,12 @@ def analyze_xlsx_and_generate_insights(
         print(f"Insights written: {insights_file}")
         return insights_file
 
-    # Ensure combined_text column exists
+    # Ensure combined_text exists
     if "combined_text" not in df.columns:
-        if "summary" in df.columns:
-            summary_series = df["summary"].astype(str)
-        else:
-            summary_series = pd.Series([""] * len(df))
-        if "transcript" in df.columns:
-            transcript_series = df["transcript"].astype(str)
-        else:
-            transcript_series = pd.Series([""] * len(df))
+        summary_series = df["summary"].astype(str) if "summary" in df.columns else pd.Series([""] * len(df))
+        transcript_series = df["transcript"].astype(str) if "transcript" in df.columns else pd.Series([""] * len(df))
         df["combined_text"] = summary_series.fillna("") + " " + transcript_series.fillna("")
 
-    # Normalize and filter the issue column
     issues_series = (
         df[issue_col]
         .astype(str)
@@ -428,56 +551,100 @@ def analyze_xlsx_and_generate_insights(
     total_area_rows = len(df)
     top_counts = issues_series.value_counts().head(3)
 
-    # Build report
+    # Fallback: if no labeled issues, synthesize issues from area themes
+    synthesized_issues = None
+    if top_counts.empty:
+        area_texts = df["combined_text"].astype(str).fillna("").tolist()
+        theme_scores = _score_themes(area_texts, meta_mask_area, max_themes=3)
+        if theme_scores:
+            synthesized_issues = [(name, score) for name, score in theme_scores]
+
+    # Header
     human_range = _format_human_date_range(week_start_str, week_end_str)
-    lines = []
+    lines: List[str] = []
     lines.append(f"📝 MetaMask {meta_mask_area} Support — Focused Issue Report")
     lines.append(f"Date Range: {human_range}")
-    lines.append(f"Conversation Volume Analyzed: {len(df):,} total")
+    lines.append(f"Conversation Volume Analyzed: {total_area_rows:,} total")
     lines.append(f"Focus: Top 3 {meta_mask_area} Issues by Volume")
     lines.append("")
-
-    lines.append("📊 Top 3 " + f"{meta_mask_area} Issues")
-    # Standardize the table header label to "<Area> Issue"
+    lines.append(f"📊 Top 3 {meta_mask_area} Issues")
     lines.append(f"{meta_mask_area} Issue\tConversations\t% of Total")
-    for issue, cnt in top_counts.items():
-        pct = (cnt / total_area_rows * 100.0) if total_area_rows else 0.0
-        lines.append(f"{issue}\t{cnt:,}\t{pct:.1f}%")
+    if synthesized_issues is not None:
+        total_for_pct = sum(v for _k, v in synthesized_issues) or 1
+        for issue, cnt in synthesized_issues:
+            pct = (cnt / total_for_pct * 100.0)
+            lines.append(f"{issue}\t{cnt:,}\t{pct:.1f}%")
+    else:
+        for issue, cnt in top_counts.items():
+            pct = (cnt / total_area_rows * 100.0) if total_area_rows else 0.0
+            lines.append(f"{issue}\t{cnt:,}\t{pct:.1f}%")
 
-    # Deep dives per issue with dynamic topical phrases
+    # Sections (dynamic for all areas)
     all_issue_texts_for_takeaways = []
-    for issue, cnt in top_counts.items():
+    issue_iterable = []
+    if synthesized_issues is not None:
+        issue_iterable = synthesized_issues
+    else:
+        issue_iterable = list(top_counts.items())
+
+    for issue, cnt in issue_iterable:
         lines.append("")
         title = _title_with_emoji(meta_mask_area, issue)
         lines.append(f"{title} ({cnt:,} conversations)")
-        issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
-        issue_mask = issue_mask.reindex(df.index, fill_value=False)
-        issue_texts = df.loc[issue_mask, "combined_text"].astype(str).fillna("").tolist()
+        if synthesized_issues is not None:
+            # Use all texts for synthesized theme issues (already theme-derived)
+            issue_texts = df["combined_text"].astype(str).fillna("").tolist()
+        else:
+            issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
+            issue_mask = issue_mask.reindex(df.index, fill_value=False)
+            issue_texts = df.loc[issue_mask, "combined_text"].astype(str).fillna("").tolist()
         all_issue_texts_for_takeaways.extend(issue_texts)
-        phrases = _top_phrases(issue_texts, max_phrases=5)
-        if phrases:
-            for p in phrases:
-                heading = p.title()
-                lines.append(heading)
-                lines.append("Observed frequently in user conversations.")
+        # Prefer theme-based explanations when available
+        theme_scores = _score_themes(issue_texts, meta_mask_area, max_themes=5)
+        if theme_scores:
+            for theme_name, _score in theme_scores:
+                h, expl = _theme_details(meta_mask_area, theme_name)
+                lines.append(h)
+                lines.append(expl or "Observed frequently in user conversations.")
                 lines.append("")
             if lines and lines[-1] == "":
                 lines.pop()
         else:
-            lines.append("- No dominant topical phrases detected.")
+            # Fallback to phrases
+            phrases = _top_phrases(issue_texts, max_phrases=5)
+            if phrases:
+                for p in phrases:
+                    lines.append(p.title())
+                    lines.append("Observed frequently in user conversations.")
+                    lines.append("")
+                if lines and lines[-1] == "":
+                    lines.pop()
+            else:
+                lines.append("- No dominant topical themes detected.")
 
     # Key takeaways (dynamic for all areas)
     lines.append("")
     lines.append("🎯 Key Takeaways")
-    if not top_counts.empty:
-        top_issue, top_cnt = next(iter(top_counts.items()))
-        top_pct = (top_cnt / total_area_rows * 100.0) if total_area_rows else 0.0
-        lines.append(f"✅ {top_issue} drives a significant share ({top_pct:.1f}%) of weekly volume.")
-        overall_phrases = _top_phrases(all_issue_texts_for_takeaways, max_phrases=4)
-        if overall_phrases:
-            lines.append(f"✅ Common themes: {', '.join(overall_phrases)}.")
-        else:
-            lines.append("✅ Users report recurring themes, suggesting targeted UX/content improvements could reduce volume.")
+    if synthesized_issues is not None:
+        if synthesized_issues:
+            dom_issue, dom_cnt = synthesized_issues[0]
+            dom_pct = (dom_cnt / max(1, sum(v for _k, v in synthesized_issues))) * 100.0
+            lines.append(f"✅ {dom_issue} appears most frequently ({dom_pct:.1f}% of detected themes).")
+    else:
+        if not top_counts.empty:
+            top_issue, top_cnt = next(iter(top_counts.items()))
+            top_pct = (top_cnt / total_area_rows * 100.0) if total_area_rows else 0.0
+            lines.append(f"✅ {top_issue} drives a significant share ({top_pct:.1f}%) of weekly volume.")
+
+    # Theme-driven recommendations
+    top_area_themes = _score_themes(all_issue_texts_for_takeaways, meta_mask_area, max_themes=3)
+    if top_area_themes:
+        rec_added = set()
+        for theme_name, _score in top_area_themes:
+            rec = THEME_RECOMMENDATIONS.get(theme_name)
+            if rec and rec not in rec_added:
+                lines.append(f"✅ {rec}")
+                rec_added.add(rec)
     lines.append("✅ Consider proactive guidance and clearer in-product messaging to reduce repeat issues.")
 
     with open(insights_file, "w", encoding="utf-8") as f:
