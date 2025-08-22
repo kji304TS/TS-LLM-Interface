@@ -138,6 +138,27 @@ STOP_WORDS = set(
 
 TZ_NY = pytz.timezone("America/New_York")
 
+# Keywords to detect technical escalations in transcripts
+ESCALATION_KEYWORDS = [
+    "escalating to technical support",
+    "escalated to technical support",
+    "escalated your issue",
+    "handing this to technical support",
+    "forwarding to technical team",
+    "escalating this issue",
+    "escalated to tier 2",
+    "escalating to tier 2",
+    "our technical support team",
+    "will be reviewed by tech support",
+]
+
+# Disallowed phrases to avoid low-signal insights
+DISALLOWED_PHRASE_PATTERNS = [
+    re.compile(r"\bhelp center\b", re.IGNORECASE),
+    re.compile(r"\bcenter bot\b", re.IGNORECASE),
+    re.compile(r"\bbot conversation\b", re.IGNORECASE),
+    re.compile(r"\bconversation rating\b", re.IGNORECASE),
+]
 # ---------------------------
 # Area-specific curated themes
 # ---------------------------
@@ -242,6 +263,18 @@ def get_last_week_dates():
     return start_date, end_date, week_start_str, week_end_str
 
 
+def _daily_windows_utc(start_date_str: str, end_date_str: str):
+    """Yield UTC second windows for each EST day in [start, end]."""
+    start_naive = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M")
+    end_naive = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M")
+    cur = TZ_NY.localize(start_naive)
+    end = TZ_NY.localize(end_naive)
+    while cur <= end:
+        day_end = min(cur.replace(hour=23, minute=59), end)
+        yield int(cur.astimezone(pytz.utc).timestamp()), int(day_end.astimezone(pytz.utc).timestamp())
+        cur = (cur + timedelta(days=1)).replace(hour=0, minute=0)
+
+
 def remove_html_tags(text: str) -> str:
     if not isinstance(text, str):
         return ""
@@ -276,64 +309,75 @@ def get_conversation_transcript(conversation: dict) -> str:
 
 
 def search_conversations(start_date_str: str, end_date_str: str):
-    """Fetch all conversations from Intercom within the time window, with basic retry on errors."""
-    start_timestamp = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M").timestamp()
-    end_timestamp = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M").timestamp()
+    """Robust daily-chunked fetch over created_at, updated_at, and last_close_at; deduplicate by id."""
+    def _search_window(field: str, start_ts: int, end_ts: int, per_page: int = 50, timeout_s: int = 60, max_retries: int = 4):
+        url = "https://api.intercom.io/conversations/search"
+        headers = {
+            "Authorization": f"Bearer {INTERCOM_PROD_KEY}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "query": {
+                "operator": "AND",
+                "value": [
+                    {"field": field, "operator": ">", "value": int(start_ts)},
+                    {"field": field, "operator": "<", "value": int(end_ts)},
+                ],
+            },
+            "pagination": {"per_page": per_page},
+        }
 
-    url = "https://api.intercom.io/conversations/search"
-    headers = {
-        "Authorization": f"Bearer {INTERCOM_PROD_KEY}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "query": {
-            "operator": "AND",
-            "value": [
-                {"field": "statistics.last_close_at", "operator": ">", "value": int(start_timestamp)},
-                {"field": "statistics.last_close_at", "operator": "<", "value": int(end_timestamp)},
-            ],
-        },
-        "pagination": {"per_page": 100},
-    }
-
-    all_conversations = []
-    retries = 3
-
-    while True:
-        try:
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
-            if response.status_code == 200:
-                data = response.json()
-                all_conversations.extend(data.get("conversations", []))
-
-                pages = data.get("pages", {})
-                next_info = pages.get("next")
-                if next_info and "starting_after" in next_info:
-                    payload["pagination"]["starting_after"] = next_info["starting_after"]
-                else:
+        collected = []
+        retries = max_retries
+        while True:
+            try:
+                resp = requests.post(url, headers=headers, json=payload, timeout=timeout_s)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    collected.extend(data.get("conversations", []))
+                    pages = data.get("pages", {})
+                    nxt = pages.get("next")
+                    if nxt and "starting_after" in nxt:
+                        payload["pagination"]["starting_after"] = nxt["starting_after"]
+                    else:
+                        break
+                elif resp.status_code == 500:
+                    if retries > 0:
+                        time.sleep(5)
+                        retries -= 1
+                        continue
                     break
-            elif response.status_code == 500:
+                else:
+                    print(f"[{field}] Error {resp.status_code}: {resp.text[:200]}")
+                    break
+            except requests.exceptions.ReadTimeout:
                 if retries > 0:
-                    time.sleep(5)
+                    time.sleep(10)
                     retries -= 1
                     continue
                 break
-            else:
-                print(f"Error: {response.status_code} - {response.text}")
-                return None
-        except requests.exceptions.ReadTimeout:
-            if retries > 0:
-                time.sleep(10)
-                retries -= 1
-                continue
-            break
-        except requests.exceptions.RequestException as ex:
-            print(f"Request failed: {ex}")
-            return None
+            except requests.exceptions.RequestException as ex:
+                print(f"[{field}] Request failed: {ex}")
+                break
+        return collected
 
-    return all_conversations
+    by_id = {}
+    for day_idx, (s_ts, e_ts) in enumerate(_daily_windows_utc(start_date_str, end_date_str), start=1):
+        # Closed in window
+        closed = _search_window("statistics.last_close_at", s_ts, e_ts)
+        for c in closed:
+            by_id[c["id"]] = c
+        # Created in window (captures open+closed)
+        created = _search_window("created_at", s_ts, e_ts)
+        for c in created:
+            by_id[c["id"]] = c
+        # Updated in window (captures active conversations touched)
+        updated = _search_window("updated_at", s_ts, e_ts)
+        for c in updated:
+            by_id[c["id"]] = c
+
+    return list(by_id.values())
 
 
 def get_intercom_conversation(conversation_id: str):
@@ -540,6 +584,16 @@ def analyze_xlsx_and_generate_insights(
         transcript_series = df["transcript"].astype(str) if "transcript" in df.columns else pd.Series([""] * len(df))
         df["combined_text"] = summary_series.fillna("") + " " + transcript_series.fillna("")
 
+    # Escalation detection
+    def _is_escalated(text: str) -> bool:
+        t = (text or "").lower()
+        return any(k in t for k in ESCALATION_KEYWORDS)
+
+    if "transcript" in df.columns:
+        escalation_count = df["transcript"].astype(str).apply(_is_escalated).sum()
+    else:
+        escalation_count = 0
+
     issues_series = (
         df[issue_col]
         .astype(str)
@@ -565,6 +619,9 @@ def analyze_xlsx_and_generate_insights(
     lines.append(f"📝 MetaMask {meta_mask_area} Support — Focused Issue Report")
     lines.append(f"Date Range: {human_range}")
     lines.append(f"Conversation Volume Analyzed: {total_area_rows:,} total")
+    if total_area_rows:
+        esc_pct = (escalation_count / total_area_rows * 100.0) if total_area_rows else 0.0
+        lines.append(f"Escalated to Technical Support: {escalation_count:,} ({esc_pct:.1f}%)")
     lines.append(f"Focus: Top 3 {meta_mask_area} Issues by Volume")
     lines.append("")
     lines.append(f"📊 Top 3 {meta_mask_area} Issues")
@@ -586,6 +643,13 @@ def analyze_xlsx_and_generate_insights(
         issue_iterable = synthesized_issues
     else:
         issue_iterable = list(top_counts.items())
+
+    def _clean_sample(text: str, limit: int = 240) -> str:
+        t = remove_html_tags(text or "").strip()
+        return (t[: limit].rstrip() + ("…" if len(t) > limit else "")) if t else ""
+
+    def _is_low_signal(phrase: str) -> bool:
+        return any(pat.search(phrase) for pat in DISALLOWED_PHRASE_PATTERNS)
 
     for issue, cnt in issue_iterable:
         lines.append("")
@@ -614,6 +678,8 @@ def analyze_xlsx_and_generate_insights(
             phrases = _top_phrases(issue_texts, max_phrases=5)
             if phrases:
                 for p in phrases:
+                    if _is_low_signal(p):
+                        continue
                     lines.append(p.title())
                     lines.append("Observed frequently in user conversations.")
                     lines.append("")
@@ -621,6 +687,33 @@ def analyze_xlsx_and_generate_insights(
                     lines.pop()
             else:
                 lines.append("- No dominant topical themes detected.")
+
+        # Representative examples
+        # Prefer summaries; if empty, fallback to transcript snippets
+        lines.append("")
+        lines.append("Representative examples:")
+        examples = []
+        if synthesized_issues is None and 'summary' in df.columns:
+            subset = df.loc[issue_mask, 'summary'].astype(str).fillna("")
+            for s in subset.head(5).tolist():
+                cleaned = _clean_sample(s)
+                if cleaned and not _is_low_signal(cleaned):
+                    examples.append(f"- {cleaned}")
+                if len(examples) >= 3:
+                    break
+        if len(examples) < 3 and 'transcript' in df.columns:
+            if synthesized_issues is None:
+                tsubset = df.loc[issue_mask, 'transcript'].astype(str).fillna("")
+            else:
+                tsubset = df['transcript'].astype(str).fillna("")
+            for s in tsubset.head(8).tolist():
+                cleaned = _clean_sample(s)
+                if cleaned and not _is_low_signal(cleaned):
+                    examples.append(f"- {cleaned}")
+                if len(examples) >= 3:
+                    break
+        if examples:
+            lines.extend(examples)
 
     # Key takeaways (dynamic for all areas)
     lines.append("")
