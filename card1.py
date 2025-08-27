@@ -117,14 +117,14 @@ def search_conversations(start_date_str, end_date_str):
 
 
 def filter_conversations_by_card(conversations):
-    """Filters conversations for the MetaMask Card area and retrieves full conversation details"""
+    """Filters conversations for the MetaMask Portfolio Dashboard area and retrieves full conversation details"""
     filtered_conversations = []
     for conversation in conversations:
         attributes = conversation.get('custom_attributes', {})
         print(f"Custom Attributes: {attributes}")
 
-        # Check if the conversation belongs to "Card"
-        if attributes.get('MetaMask area', '').strip().lower() == 'card':
+        # Check if the conversation belongs to "Portfolio Dashboard"
+        if attributes.get('MetaMask area', '').strip().lower() == 'portfolio dashboard':
             full_conversation = get_intercom_conversation(conversation['id'])
             if full_conversation:
                 full_conversation['MM Card Issue'] = attributes.get('MM Card Issue', 'None')
@@ -135,7 +135,7 @@ def filter_conversations_by_card(conversations):
 
 
 def store_conversations_to_csv(conversations, file_path):
-    """Stores filtered Card conversations into a CSV file"""
+    """Stores filtered Portfolio Dashboard conversations into a CSV file"""
     headers = ['conversation_id', 'summary', 'transcript', 'MM Card Issue', 'MM Card Partner issue']
 
     with open(file_path, mode='w', newline='', encoding='utf-8') as file:
@@ -161,14 +161,14 @@ def store_conversations_to_csv(conversations, file_path):
 
 
 def main_function():
-    """Main function to extract, filter, and save Card conversations"""
+    """Main function to extract, filter, and save Portfolio Dashboard conversations"""
     conversations = search_conversations("2025-1-29 00:00", "2025-1-31 16:00")
     if conversations:
         card_conversations = filter_conversations_by_card(conversations)
 
-        print(f"Card Conversations: {len(card_conversations)}")
+        print(f"Portfolio Dashboard Conversations: {len(card_conversations)}")
 
-        store_conversations_to_csv(card_conversations, '1-29-25-to-1-31-25-combined_mmcard_output-1.csv')
+        store_conversations_to_csv(card_conversations, '1-29-25-to-1-31-25-portfolio_dashboard_output-1.csv')
     else:
         print('No conversations found for provided timeframe')
 
