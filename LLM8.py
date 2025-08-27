@@ -34,7 +34,7 @@ CATEGORY_HEADERS = {
         "Dashboard Issue - Subcategory",
         "KYC Issue - Subcategory",
     ],
-    "Dashboard": ["Dashboard issue"],
+    "Dashboard": [],
     "Ramps": ["Buy or Sell", "Buy issue", "Sell issue"],
     "SDK": [],
     "Security": [],
@@ -192,6 +192,7 @@ _AREA_SYNONYMS = {
     "fraud": "Security",
     "phishing": "Security",
     "scam": "Security",
+    "portfolio dashboard": "Dashboard",
 }
 
 _area_regex_cache: dict[str, re.Pattern] = {}
