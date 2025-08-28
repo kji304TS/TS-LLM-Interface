@@ -70,7 +70,7 @@ os.makedirs(INSIGHTS_DIR, exist_ok=True)
 
 
 # Runtime/behavior configuration (override via env)
-MAX_RUNTIME_SEC = int(os.getenv("MAX_RUNTIME_SEC", "36000"))  # default 10 hours
+MAX_RUNTIME_SEC = int(os.getenv("MAX_RUNTIME_SEC", "43200"))  # default 12 hours
 INFERENCE_SCAN_LIMIT = int(os.getenv("INFERENCE_SCAN_LIMIT", "500"))  # cap inference scans
 DETAIL_FETCH_TIMEOUT = int(os.getenv("DETAIL_FETCH_TIMEOUT", "20"))
 SEARCH_REQUEST_TIMEOUT = int(os.getenv("SEARCH_REQUEST_TIMEOUT", "60"))
