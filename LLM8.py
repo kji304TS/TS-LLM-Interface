@@ -75,6 +75,7 @@ INFERENCE_SCAN_LIMIT = int(os.getenv("INFERENCE_SCAN_LIMIT", "500"))  # cap infe
 DETAIL_FETCH_TIMEOUT = int(os.getenv("DETAIL_FETCH_TIMEOUT", "20"))
 SEARCH_REQUEST_TIMEOUT = int(os.getenv("SEARCH_REQUEST_TIMEOUT", "60"))
 LOG_EVERY = int(os.getenv("LOG_EVERY", "200"))
+SEARCH_PER_PAGE = int(os.getenv("SEARCH_PER_PAGE", "150"))
 
 STOP_WORDS = set(
     [
@@ -405,7 +406,7 @@ def get_conversation_transcript(conversation: dict) -> str:
 def search_conversations(start_date_str: str, end_date_str: str, session: Optional[requests.Session] = None, end_time: Optional[float] = None):
     """Robust daily-chunked fetch over created_at, updated_at, and last_close_at; deduplicate by id."""
     sess = session or requests.Session()
-    def _search_window(field: str, start_ts: int, end_ts: int, per_page: int = 50, timeout_s: int = SEARCH_REQUEST_TIMEOUT, max_retries: int = 4):
+    def _search_window(field: str, start_ts: int, end_ts: int, per_page: int = SEARCH_PER_PAGE, timeout_s: int = SEARCH_REQUEST_TIMEOUT, max_retries: int = 4):
         url = "https://api.intercom.io/conversations/search"
         headers = {
             "Authorization": f"Bearer {INTERCOM_PROD_KEY}",
@@ -468,9 +469,7 @@ def search_conversations(start_date_str: str, end_date_str: str, session: Option
     windows = list(_daily_windows_utc(start_date_str, end_date_str))
     total_days = len(windows)
     for day_idx, (s_ts, e_ts) in enumerate(windows, start=1):
-        if end_time and time.time() > end_time:
-            print("[Search] Time budget exceeded before completing all days; returning partial results.")
-            break
+        # If end_time is provided, it is advisory. We still finish all day windows to ensure full week coverage.
         print(f"[Search] Day {day_idx}/{total_days} window starting…")
         # Closed in window
         closed = _search_window("statistics.last_close_at", s_ts, e_ts)
@@ -526,9 +525,7 @@ def filter_conversations_by_product(conversations, product: str, session: Option
     total = len(conversations)
     scanned_for_inference = 0
     for idx, conv in enumerate(conversations, start=1):
-        if end_time and time.time() > end_time:
-            print(f"[Area {product}] Time budget exceeded; returning partial matches ({len(filtered)}).")
-            break
+        # Do not abort early here; we want to finish area processing once search is complete
         if idx % LOG_EVERY == 0:
             print(f"[Area {product}] Scanned {idx}/{total}, matches so far: {len(filtered)}")
         attributes = conv.get("custom_attributes", {}) or {}
@@ -959,9 +956,6 @@ def main_function(start_date: str, end_date: str, week_start_str: str, week_end_
     generated_insights: Set[str] = set()
 
     for area in CATEGORY_HEADERS.keys():
-        if deadline and time.time() > deadline:
-            print("Global time budget exceeded before processing all areas.")
-            break
         print(f"[Area {area}] Filtering conversations…")
         filtered = filter_conversations_by_product(conversations, area, session=session, detail_cache=detail_cache, end_time=deadline)
         if not filtered:
@@ -981,7 +975,10 @@ def main_function(start_date: str, end_date: str, week_start_str: str, week_end_
         print("Skipping uploads due to Drive auth failure.")
         return
 
-    print("Uploading generated files…")
+    if not generated_xlsx and not generated_insights:
+        print("Nothing to upload (no files generated).")
+        return
+    print(f"Uploading generated files… (XLSX={len(generated_xlsx)}, Insights={len(generated_insights)})")
     for fpath in sorted(generated_xlsx):
         upload_to_google_drive_v3(drive_service, fpath)
     for fpath in sorted(generated_insights):
