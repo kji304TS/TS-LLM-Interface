@@ -69,6 +69,13 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(INSIGHTS_DIR, exist_ok=True)
 
 
+# Runtime/behavior configuration (override via env)
+MAX_RUNTIME_SEC = int(os.getenv("MAX_RUNTIME_SEC", "3600"))  # default 60 minutes
+INFERENCE_SCAN_LIMIT = int(os.getenv("INFERENCE_SCAN_LIMIT", "500"))  # cap inference scans
+DETAIL_FETCH_TIMEOUT = int(os.getenv("DETAIL_FETCH_TIMEOUT", "20"))
+SEARCH_REQUEST_TIMEOUT = int(os.getenv("SEARCH_REQUEST_TIMEOUT", "60"))
+LOG_EVERY = int(os.getenv("LOG_EVERY", "200"))
+
 STOP_WORDS = set(
     [
         "the",
@@ -395,9 +402,10 @@ def get_conversation_transcript(conversation: dict) -> str:
     return "\n".join(transcript_lines) if transcript_lines else "No transcript available"
 
 
-def search_conversations(start_date_str: str, end_date_str: str):
+def search_conversations(start_date_str: str, end_date_str: str, session: Optional[requests.Session] = None, end_time: Optional[float] = None):
     """Robust daily-chunked fetch over created_at, updated_at, and last_close_at; deduplicate by id."""
-    def _search_window(field: str, start_ts: int, end_ts: int, per_page: int = 50, timeout_s: int = 60, max_retries: int = 4):
+    sess = session or requests.Session()
+    def _search_window(field: str, start_ts: int, end_ts: int, per_page: int = 50, timeout_s: int = SEARCH_REQUEST_TIMEOUT, max_retries: int = 4):
         url = "https://api.intercom.io/conversations/search"
         headers = {
             "Authorization": f"Bearer {INTERCOM_PROD_KEY}",
@@ -417,9 +425,13 @@ def search_conversations(start_date_str: str, end_date_str: str):
 
         collected = []
         retries = max_retries
+        page_idx = 0
         while True:
+            if end_time and time.time() > end_time:
+                print(f"[Search] Time budget exceeded during {field} window; returning partial results.")
+                break
             try:
-                resp = requests.post(url, headers=headers, json=payload, timeout=timeout_s)
+                resp = sess.post(url, headers=headers, json=payload, timeout=timeout_s)
                 if resp.status_code == 200:
                     data = resp.json()
                     collected.extend(data.get("conversations", []))
@@ -427,6 +439,9 @@ def search_conversations(start_date_str: str, end_date_str: str):
                     nxt = pages.get("next")
                     if nxt and "starting_after" in nxt:
                         payload["pagination"]["starting_after"] = nxt["starting_after"]
+                        page_idx += 1
+                        if page_idx % 5 == 0:
+                            print(f"[Search] {field} window page {page_idx} — total collected so far: {len(collected)}")
                     else:
                         break
                 elif resp.status_code == 500:
@@ -450,7 +465,13 @@ def search_conversations(start_date_str: str, end_date_str: str):
         return collected
 
     by_id = {}
-    for day_idx, (s_ts, e_ts) in enumerate(_daily_windows_utc(start_date_str, end_date_str), start=1):
+    windows = list(_daily_windows_utc(start_date_str, end_date_str))
+    total_days = len(windows)
+    for day_idx, (s_ts, e_ts) in enumerate(windows, start=1):
+        if end_time and time.time() > end_time:
+            print("[Search] Time budget exceeded before completing all days; returning partial results.")
+            break
+        print(f"[Search] Day {day_idx}/{total_days} window starting…")
         # Closed in window
         closed = _search_window("statistics.last_close_at", s_ts, e_ts)
         for c in closed:
@@ -464,19 +485,26 @@ def search_conversations(start_date_str: str, end_date_str: str):
         for c in updated:
             by_id[c["id"]] = c
 
+    print(f"[Search] Total unique conversations collected: {len(by_id)}")
     return list(by_id.values())
 
 
-def get_intercom_conversation(conversation_id: str):
+def get_intercom_conversation(conversation_id: str, session: Optional[requests.Session] = None, cache: Optional[dict] = None, timeout_s: int = DETAIL_FETCH_TIMEOUT):
+    if cache is not None and conversation_id in cache:
+        return cache[conversation_id]
     url = f"https://api.intercom.io/conversations/{conversation_id}"
     retries = 3
     headers = {"Authorization": f"Bearer {INTERCOM_PROD_KEY}"}
+    sess = session or requests.Session()
 
     while retries > 0:
         try:
-            response = requests.get(url, headers=headers, timeout=30)
+            response = sess.get(url, headers=headers, timeout=timeout_s)
             if response.status_code == 200:
-                return response.json()
+                data = response.json()
+                if cache is not None:
+                    cache[conversation_id] = data
+                return data
             if response.status_code == 500:
                 retries -= 1
                 time.sleep(5)
@@ -485,17 +513,24 @@ def get_intercom_conversation(conversation_id: str):
             return None
         except requests.exceptions.ReadTimeout:
             retries -= 1
-            time.sleep(10)
+            time.sleep(5)
         except requests.exceptions.RequestException as ex:
             print(f"Request failed for conversation {conversation_id}: {ex}")
             return None
     return None
 
 
-def filter_conversations_by_product(conversations, product: str):
+def filter_conversations_by_product(conversations, product: str, session: Optional[requests.Session], detail_cache: dict, end_time: Optional[float]):
     filtered = []
     target = product.strip()
-    for conv in conversations:
+    total = len(conversations)
+    scanned_for_inference = 0
+    for idx, conv in enumerate(conversations, start=1):
+        if end_time and time.time() > end_time:
+            print(f"[Area {product}] Time budget exceeded; returning partial matches ({len(filtered)}).")
+            break
+        if idx % LOG_EVERY == 0:
+            print(f"[Area {product}] Scanned {idx}/{total}, matches so far: {len(filtered)}")
         attributes = conv.get("custom_attributes", {}) or {}
         labeled_area = _get_area_attribute(attributes)
 
@@ -505,18 +540,22 @@ def filter_conversations_by_product(conversations, product: str):
         else:
             # Fallback to text inference if area label is missing/mismatched for select areas
             if target in ("Security", "SDK", "Wallet API"):
-                # Pull minimal details to build text for inference
-                full_preview = get_intercom_conversation(conv["id"]) or {}
-                summary = sanitize_text(get_conversation_summary(full_preview))
-                transcript = sanitize_text(get_conversation_transcript(full_preview))
-                combined = f"{summary} \n {transcript}".strip()
-                if _text_suggests_area(combined, target):
-                    matched = True
-                    # reuse full_preview as the enriched payload
-                    conv = full_preview if full_preview else conv
+                if scanned_for_inference >= INFERENCE_SCAN_LIMIT:
+                    pass
+                else:
+                    scanned_for_inference += 1
+                    # Pull minimal details to build text for inference
+                    full_preview = get_intercom_conversation(conv["id"], session=session, cache=detail_cache) or {}
+                    summary = sanitize_text(get_conversation_summary(full_preview))
+                    transcript = sanitize_text(get_conversation_transcript(full_preview))
+                    combined = f"{summary} \n {transcript}".strip()
+                    if _text_suggests_area(combined, target):
+                        matched = True
+                        # reuse full_preview as the enriched payload
+                        conv = full_preview if full_preview else conv
 
         if matched:
-            full = conv if conv.get("conversation_parts") else get_intercom_conversation(conv["id"])  # enrich with parts
+            full = conv if conv.get("conversation_parts") else get_intercom_conversation(conv["id"], session=session, cache=detail_cache)  # enrich with parts
             if full:
                 # Carry through the custom attributes we care about for this area
                 full_attrs = full.get("custom_attributes", {}) or {}
@@ -524,6 +563,7 @@ def filter_conversations_by_product(conversations, product: str):
                     full_attrs[col] = attributes.get(col, "None")
                 full["custom_attributes"] = full_attrs
                 filtered.append(full)
+    print(f"[Area {product}] Matched {len(filtered)} conversations.")
     return filtered
 
 
@@ -905,7 +945,12 @@ def authenticate_google_drive_via_service_account():
 
 def main_function(start_date: str, end_date: str, week_start_str: str, week_end_str: str):
     print(f"Searching for conversations from {start_date} to {end_date}…")
-    conversations = search_conversations(start_date, end_date)
+    start_ts = time.time()
+    deadline = start_ts + MAX_RUNTIME_SEC if MAX_RUNTIME_SEC > 0 else None
+    session = requests.Session()
+    detail_cache: dict = {}
+
+    conversations = search_conversations(start_date, end_date, session=session, end_time=deadline)
     if not conversations:
         print("No conversations found in the selected time window.")
         return
@@ -914,7 +959,11 @@ def main_function(start_date: str, end_date: str, week_start_str: str, week_end_
     generated_insights: Set[str] = set()
 
     for area in CATEGORY_HEADERS.keys():
-        filtered = filter_conversations_by_product(conversations, area)
+        if deadline and time.time() > deadline:
+            print("Global time budget exceeded before processing all areas.")
+            break
+        print(f"[Area {area}] Filtering conversations…")
+        filtered = filter_conversations_by_product(conversations, area, session=session, detail_cache=detail_cache, end_time=deadline)
         if not filtered:
             continue
 
