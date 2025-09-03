@@ -247,6 +247,65 @@ def _top_suspicious_domains(texts: list[str], top_n: int = 5) -> list[tuple[str,
     return ranked[:top_n]
 
 # ---------------------------
+# Security taxonomy (user-provided terms)
+# ---------------------------
+
+SECURITY_TAXONOMY: dict[str, list[str]] = {
+    # Reason
+    "Reason|Ecosystem exploit": [r"ecosystem\s+exploit"],
+    "Reason|Unknown": [r"unknown"],
+    "Reason|Unintended contract interaction": [r"unintended\s+contract\s+interaction"],
+    "Reason|No info": [r"no\s+info|no\s+information"],
+    "Reason|User error": [r"user\s+error"],
+    "Reason|SRP/PK compromised": [r"(srp|seed\s+phrase|secret\s+recovery\s+phrase|private\s+key)\s+(compromised|stolen|leaked)", r"key\s+comp(romised|)"],
+    # Vector
+    "Vector|Malware": [r"malware|virus|trojan|stealer|keylog(ger)?"],
+    "Vector|Job Offer Scam": [r"job\s+offer\s+scam"],
+    "Vector|Fake Application": [r"fake\s+app(lication)?"],
+    "Vector|Scam Token": [r"scam\s+token"],
+    "Vector|SRP Phishing": [r"(srp|seed\s+phrase|secret\s+recovery\s+phrase).*phish"],
+    "Vector|Investment Scam": [r"investment\s+scam|pig\s+butcher(ing)?"],
+    "Vector|Unknown": [r"unknown"],
+    # Method
+    "Method|Blockchain phishing": [r"blockchain\s+phish"],
+    "Method|Spearphishing": [r"spear\s*phish"],
+    "Method|Email Phishing": [r"email\s+phish"],
+    "Method|N/A": [r"n/?a|not\s+applicable"],
+    "Method|Pig butchering": [r"pig\s+butcher(ing)?"],
+    "Method|Angler phishing": [r"angler\s+phish"],
+    "Method|Unknown": [r"unknown"],
+    # SRP/PK compromised reason
+    "SRP/PK compromised reason|SRP Physically Stolen": [r"srp\s+physic(al|ally)\s+stolen"],
+    "SRP/PK compromised reason|SRP Digitally Stolen": [r"srp\s+digitally\s+stolen"],
+    "SRP/PK compromised reason|Rotten Seed": [r"rotten\s+seed"],
+    "SRP/PK compromised reason|SRP Phished Directly": [r"srp\s+phish(ed)?\s+directly"],
+    "SRP/PK compromised reason|Malware": [r"malware|stealer"],
+    "SRP/PK compromised reason|Unknown": [r"unknown"],
+    # User error reason
+    "User error reason|Other wallet transfer": [r"other\s+wallet\s+transfer"],
+    "User error reason|CEX transfer": [r"cex\s+transfer|centralized\s+exchange\s+transfer"],
+    "User error reason|Off-chain scam": [r"off-?chain\s+scam"],
+    "User error reason|Scam token purchase": [r"scam\s+token\s+purchase"],
+    "User error reason|Direct token transfer": [r"direct\s+token\s+transfer"],
+    # Unintended contract interaction reason
+    "Unintended contract interaction reason|7702 batch transfer": [r"7702\s+batch\s+transfer"],
+    "Unintended contract interaction reason|Token Approval & Transfer": [r"token\s+approval.*transfer"],
+    "Unintended contract interaction reason|Token transfer": [r"token\s+transfer"],
+    "Unintended contract interaction reason|Token Approval": [r"token\s+approval"],
+}
+
+def _score_taxonomy(texts: list[str], taxonomy: dict[str, list[str]], top_n: int = 6) -> list[tuple[str, int]]:
+    compiled = {k: re.compile("|".join(v), flags=re.IGNORECASE) for k, v in taxonomy.items()}
+    counts: dict[str, int] = {k: 0 for k in taxonomy.keys()}
+    for t in texts:
+        tt = t or ""
+        for label, patt in compiled.items():
+            if patt.search(tt):
+                counts[label] += 1
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    return [(k, v) for k, v in ranked if v > 0][:top_n]
+
+# ---------------------------
 # Area detection helpers
 # ---------------------------
 
@@ -919,6 +978,18 @@ def analyze_xlsx_and_generate_insights(
                     for reason, rcnt in reason_counts[:5]:
                         pct = rcnt / total_issue_conversations * 100.0
                         lines.append(f"- {reason}: {rcnt:,} ({pct:.1f}%)")
+                # Taxonomy breakdowns (Reason/Vector/Method/User error/Unintended interaction)
+                tax = _score_taxonomy(issue_texts, SECURITY_TAXONOMY, top_n=6)
+                if tax:
+                    lines.append("Related classifications:")
+                    for label, rcnt in tax:
+                        pct = rcnt / total_issue_conversations * 100.0
+                        # pretty print "Category|Value"
+                        if "|" in label:
+                            cat, val = label.split("|", 1)
+                            lines.append(f"- {cat}: {val} — {rcnt:,} ({pct:.1f}%)")
+                        else:
+                            lines.append(f"- {label}: {rcnt:,} ({pct:.1f}%)")
             # Top suspicious domains/dapps for Phishing/Scams
             if ("phishing" in issue_key) or ("scam" in issue_key) or ("🎣" in issue):
                 top_domains = _top_suspicious_domains(issue_texts, top_n=5)
