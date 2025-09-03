@@ -14,6 +14,7 @@ from openpyxl.styles import Alignment
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from urllib.parse import urlparse
 
 
 # Load environment variables early
@@ -167,6 +168,83 @@ DISALLOWED_PHRASE_PATTERNS = [
     re.compile(r"\bbot conversation\b", re.IGNORECASE),
     re.compile(r"\bconversation rating\b", re.IGNORECASE),
 ]
+
+# ---------------------------
+# Security-specific analysis helpers
+# ---------------------------
+
+# Reasons for compromises (binary per conversation)
+SECURITY_COMPROMISE_REASON_PATTERNS: dict[str, list[str]] = {
+    "Seed phrase exposed/shared": [r"seed\s+phrase", r"secret\s+recovery\s+phrase", r"12[-\s]?word"],
+    "Private key leaked/imported": [r"private\s+key", r"export\s+key", r"imported\s+account"],
+    "Signed malicious transaction": [r"signed?\s+(a\s+)?(malicious|phishing)\s+tx|transaction", r"permit\s*\(|permit2", r"signature\s+request"],
+    "Approval to malicious contract": [r"approve|approval|allowance", r"revoke(\s+|\-)?(cash|tool|dot)"],
+    "Phishing website / fake support": [r"phish|fake\s+(site|support)|impersonat|scam\s+site", r"telegram|whatsapp|discord\s+support"],
+    "Malware/clipboard hijack": [r"malware|virus|trojan|clipboard|keylog(ger)?|stealer"],
+    "SIM swap or email compromise": [r"sim\s+swap|phone\s+number\s+port|email\s+compromis|mailbox\s+hacked"],
+}
+
+# Benign/common domains to ignore from phishing extraction
+SECURITY_BENIGN_DOMAINS: set[str] = set([
+    "metamask.io",
+    "support.metamask.io",
+    "consensys.net",
+    "intercom.io",
+    "zendesk.com",
+    "docs.metamask.io",
+])
+
+def _count_binary_reason_hits(texts: list[str], pattern_map: dict[str, list[str]]) -> list[tuple[str, int]]:
+    reason_to_count: dict[str, int] = {k: 0 for k in pattern_map.keys()}
+    compiled: dict[str, re.Pattern] = {k: re.compile("|".join(v), flags=re.IGNORECASE) for k, v in pattern_map.items()}
+    for t in texts:
+        t0 = t or ""
+        for reason, patt in compiled.items():
+            if patt.search(t0):
+                reason_to_count[reason] += 1
+    # Sort by count desc then name
+    ranked = sorted(reason_to_count.items(), key=lambda kv: (-kv[1], kv[0]))
+    # drop zeroes
+    return [(k, v) for k, v in ranked if v > 0]
+
+def _extract_domains_from_text(text: str) -> set[str]:
+    found: set[str] = set()
+    if not text:
+        return found
+    # url-like tokens and bare domains
+    for match in re.findall(r"https?://[^\s]+|\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b", text, flags=re.IGNORECASE):
+        dom = match
+        try:
+            if match.startswith("http"):
+                parsed = urlparse(match)
+                dom = parsed.netloc or parsed.path
+            # strip path if any
+            dom = dom.split("/")[0]
+            dom = dom.lower()
+            if dom.startswith("www."):
+                dom = dom[4:]
+            # crude noise filter for emails
+            if "@" in dom:
+                continue
+            # basic TLD check
+            if "." not in dom:
+                continue
+            found.add(dom)
+        except Exception:
+            continue
+    return found
+
+def _top_suspicious_domains(texts: list[str], top_n: int = 5) -> list[tuple[str, int]]:
+    domain_counts: dict[str, int] = {}
+    for t in texts:
+        domains = _extract_domains_from_text(t or "")
+        # count once per conversation per domain
+        for d in domains:
+            if d in SECURITY_BENIGN_DOMAINS:
+                continue
+            domain_counts[d] = domain_counts.get(d, 0) + 1
+    ranked = sorted(domain_counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    return ranked[:top_n]
 
 # ---------------------------
 # Area detection helpers
@@ -828,6 +906,27 @@ def analyze_xlsx_and_generate_insights(
             issue_mask = issue_mask.reindex(df.index, fill_value=False)
             issue_texts = df.loc[issue_mask, "combined_text"].astype(str).fillna("").tolist()
         all_issue_texts_for_takeaways.extend(issue_texts)
+
+        # Security-specific diagnostics
+        if meta_mask_area == "Security":
+            total_issue_conversations = max(1, len(issue_texts))
+            issue_key = (issue or "").lower()
+            # Leading reasons for Recovery/Compromise
+            if ("compromise" in issue_key) or ("recovery" in issue_key):
+                reason_counts = _count_binary_reason_hits(issue_texts, SECURITY_COMPROMISE_REASON_PATTERNS)
+                if reason_counts:
+                    lines.append("Why this occurs (leading reasons):")
+                    for reason, rcnt in reason_counts[:5]:
+                        pct = rcnt / total_issue_conversations * 100.0
+                        lines.append(f"- {reason}: {rcnt:,} ({pct:.1f}%)")
+            # Top suspicious domains/dapps for Phishing/Scams
+            if ("phishing" in issue_key) or ("scam" in issue_key) or ("🎣" in issue):
+                top_domains = _top_suspicious_domains(issue_texts, top_n=5)
+                if top_domains:
+                    lines.append("Most common suspicious domains/dapps:")
+                    for dom, dcnt in top_domains:
+                        pct = dcnt / total_issue_conversations * 100.0
+                        lines.append(f"- {dom}: {dcnt:,} ({pct:.1f}%)")
         # Prefer theme-based explanations when available
         theme_scores = _score_themes(issue_texts, meta_mask_area, max_themes=5)
         if theme_scores:
