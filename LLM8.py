@@ -306,6 +306,258 @@ def _score_taxonomy(texts: list[str], taxonomy: dict[str, list[str]], top_n: int
     return [(k, v) for k, v in ranked if v > 0][:top_n]
 
 # ---------------------------
+# Additional area taxonomies (user-provided terms)
+# ---------------------------
+
+SWAPS_TAXONOMY: dict[str, list[str]] = {
+    # Swap Feature
+    "Swap Feature|Native Swap": [r"native\s+swap"],
+    "Swap Feature|Bridge": [r"\bbridge\b"],
+    "Swap Feature|Cross-Chain Swap": [r"cross[- ]?chain\s+swap"],
+    # Swap issues
+    "Swap issues|Conflicting Token Price Data": [r"conflict(ing)?\s+token\s+price"],
+    "Swap issues|Insufficient Funds": [r"insufficient\s+funds"],
+    "Swap issues|UI Functionality Issue": [r"ui\s+(function(al)?|issue)"],
+    "Swap issues|Approval Transaction Only": [r"approval\s+transaction\s+only"],
+    "Swap issues|Received incorrect amount / Price Impact": [r"(incorrect|wrong)\s+amount|price\s+impact"],
+    "Swap issues|Unsupported/Blocked Token": [r"(unsupported|blocked)\s+token"],
+    "Swap issues|No Trade Routes Available": [r"no\s+trade\s+routes?\s+available"],
+    "Swap issues|Failed Transaction": [r"failed\s+transaction"],
+    "Swap issues|User Training": [r"user\s+training|how\s+to\s+swap|help\s+swap"],
+    "Swap issues|Error Fetching Quotes": [r"error\s+fetch(ing)?\s+quotes?"],
+    "Swap issues|No Quotes Available": [r"no\s+quotes?\s+available"],
+    # Bridge issues
+    "Bridge issues|Received an incorrect number of tokens": [r"incorrect\s+number\s+of\s+tokens"],
+    "Bridge issues|Approval Transaction Only": [r"approval\s+transaction\s+only"],
+    "Bridge issues|UI Functionality Issue": [r"bridge\s+ui\s+issue|ui\s+(function(al)?|issue)"],
+    "Bridge issues|Received the wrong token": [r"received\s+the\s+wrong\s+token"],
+    "Bridge issues|Bridge UI Issue": [r"bridge\s+ui\s+issue"],
+    "Bridge issues|Network/Token not supported": [r"(network|token)\s+not\s+supported"],
+    "Bridge issues|No Trade Routes Available": [r"no\s+(bridge\s+)?(trade\s+)?routes?\s+available"],
+    "Bridge issues|No bridge options available": [r"no\s+bridge\s+options?\s+available"],
+    "Bridge issues|Bridge Refunded": [r"bridge\s+refund(ed)?"],
+    "Bridge issues|Other": [r"bridge.*other"],
+    "Bridge issues|Failed transaction": [r"failed\s+transaction"],
+    "Bridge issues|User Training": [r"user\s+training|how\s+to\s+bridge"],
+    "Bridge issues|Haven't received the funds / Bridge processing": [r"haven'?t\s+received\s+the\s+funds|bridge\s+processing"],
+    # Swap: Network
+    "Swap: Network|Solana": [r"solana"],
+    "Swap: Network|BNB Smart Chain": [r"bnb\s+smart\s+chain|bsc"],
+    "Swap: Network|Avalanche": [r"avalanche|avax"],
+    "Swap: Network|Arbitrum One": [r"arbitrum(\s+one)?"],
+    "Swap: Network|Ethereum Mainnet": [r"ethereum\s+mainnet|eth(\s+mainnet)?"],
+    "Swap: Network|Linea": [r"linea"],
+    "Swap: Network|Base": [r"\bbase\b"],
+    "Swap: Network|Polygon": [r"polygon|matic"],
+    "Swap: Network|Unknown": [r"unknown\s+network"],
+    # Bridge: Network
+    "Bridge: Network|Pulse": [r"pulse"],
+    "Bridge: Network|Arbitrum One": [r"arbitrum(\s+one)?"],
+    "Bridge: Network|BNB Smart Chain": [r"bnb\s+smart\s+chain|bsc"],
+    "Bridge: Network|Solana": [r"solana"],
+    "Bridge: Network|Ethereum Mainnet": [r"ethereum\s+mainnet|eth(\s+mainnet)?"],
+    "Bridge: Network|Linea": [r"linea"],
+    "Bridge: Network|Polygon": [r"polygon|matic"],
+    "Bridge: Network|Avalanche": [r"avalanche|avax"],
+    "Bridge: Network|Base": [r"\bbase\b"],
+    # Swap: Transaction issue
+    "Swap: Transaction issue|Execution Reverted": [r"execution\s+revert(ed)?"],
+    "Swap: Transaction issue|Failed transaction (local)": [r"failed\s+transaction\s*\(local\)"],
+    # Bridge Provider
+    "Bridge Provider|Hop": [r"\bhop\b"],
+    "Bridge Provider|Stargate": [r"stargate"],
+    "Bridge Provider|Axelar": [r"axelar"],
+    "Bridge Provider|Mayan": [r"mayan"],
+    "Bridge Provider|deBridge": [r"debridge"],
+    "Bridge Provider|Celer cBridge": [r"celer|cbridge"],
+    "Bridge Provider|Across": [r"across"],
+    "Bridge Provider|Circle": [r"circle"],
+    "Bridge Provider|Squid": [r"squid"],
+    "Bridge Provider|Relay": [r"relay"],
+    # Swap: Platform
+    "Swap: Platform|Portfolio": [r"portfolio"],
+    "Swap: Platform|Extension": [r"extension"],
+    "Swap: Platform|Mobile": [r"mobile"],
+    # Bridge: Transaction issue
+    "Bridge: Transaction issue|Failed transaction (on-chain)": [r"failed\s+transaction\s*\(on[- ]?chain\)"],
+    "Bridge: Transaction issue|Pending transaction (local)": [r"pending\s+transaction\s*\(local\)"],
+    "Bridge: Transaction issue|Out of gas": [r"out\s+of\s+gas"],
+    "Bridge: Transaction issue|Failed transaction (local)": [r"failed\s+transaction\s*\(local\)"],
+    # Swap: User Training
+    "Swap: User Training|Approval issue": [r"approval\s+issue"],
+    "Swap: User Training|Not enough gas": [r"not\s+enough\s+gas"],
+    "Swap: User Training|General question": [r"general\s+question"],
+    "Swap: User Training|Token not imported": [r"token\s+not\s+imported"],
+    "Swap: User Training|Gas included Swap Education": [r"gas\s+included\s+swap\s+education"],
+    "Swap: User Training|Tx review / Successful Swap": [r"tx\s+review|successful\s+swap"],
+    # Bridge: User training
+    "Bridge: User training|Approval Transaction Only": [r"approval\s+transaction\s+only"],
+    "Bridge: User training|Bridge UI Issue": [r"bridge\s+ui\s+issue"],
+    "Bridge: User training|No bridge options available": [r"no\s+bridge\s+options?\s+available"],
+    "Bridge: User training|UI Functionality Issue": [r"ui\s+(function(al)?|issue)"],
+    "Bridge: User training|Network/token not supported": [r"(network|token)\s+not\s+supported"],
+    "Bridge: User training|Bridge Refunded": [r"bridge\s+refund(ed)?"],
+    "Bridge: User training|Failed transaction": [r"failed\s+transaction"],
+    "Bridge: User training|Haven't received the funds / Bridge processing": [r"haven'?t\s+received\s+the\s+funds|bridge\s+processing"],
+    # Bridge: Platform
+    "Bridge: Platform|Portfolio": [r"portfolio"],
+    "Bridge: Platform|Extension": [r"extension"],
+    "Bridge: Platform|Mobile": [r"mobile"],
+}
+
+RAMPS_TAXONOMY: dict[str, list[str]] = {
+    # Platform
+    "Ramps: Platform|Portfolio": [r"portfolio"],
+    "Ramps: Platform|Extension": [r"extension"],
+    "Ramps: Platform|Mobile": [r"mobile"],
+    # Payment provider
+    "Ramps: Payment provider|Mercuryo": [r"mercuryo"],
+    "Ramps: Payment provider|Transak": [r"transak"],
+    "Ramps: Payment provider|MoonPay": [r"moon\s?pay"],
+    "Ramps: Payment provider|Banxa": [r"banxa"],
+    # Buy or Sell
+    "Ramps: Buy or Sell|Buy": [r"\bbuy\b"],
+    "Ramps: Buy or Sell|Sell": [r"\bsell\b"],
+    # Buy Issue
+    "Ramps: Buy Issue|Unsupported Region": [r"unsupported\s+region"],
+    "Ramps: Buy Issue|Purchase failed or declined": [r"(purchase|buy)\s+(failed|declined)"],
+    "Ramps: Buy Issue|Error in Buy Flow (Vendor)": [r"error\s+in\s+buy\s+flow\s*\(vendor\)"],
+    "Ramps: Buy Issue|Funds did not arrive": [r"funds\s+did\s+not\s+arrive"],
+    "Ramps: Buy Issue|Verification process issue (Vendor)": [r"verification\s+process\s+issue\s*\(vendor\)"],
+    "Ramps: Buy Issue|Error in Buy Flow (MetaMask)": [r"error\s+in\s+buy\s+flow\s*\(metamask\)"],
+    "Ramps: Buy Issue|User Training": [r"user\s+training|how\s+to\s+buy"],
+    # Sell Issue
+    "Ramps: Sell Issue|Sale failed or declined": [r"sale\s+(failed|declined)"],
+    "Ramps: Sell Issue|Unsupported Region": [r"unsupported\s+region"],
+    "Ramps: Sell Issue|Error in Sell flow (MetaMask)": [r"error\s+in\s+sell\s+flow\s*\(metamask\)"],
+    "Ramps: Sell Issue|User Training": [r"user\s+training|how\s+to\s+sell"],
+    "Ramps: Sell Issue|Insufficient tokens for sale or gas": [r"insufficient\s+(tokens|gas)"],
+    "Ramps: Sell Issue|Error in Sell flow (Vendor)": [r"error\s+in\s+sell\s+flow\s*\(vendor\)"],
+    "Ramps: Sell Issue|Payment did not arrive at cash-out destination": [r"payment\s+did\s+not\s+arrive|cash[- ]?out\s+destination"],
+    # Network
+    "Ramps: Network|Polygon": [r"polygon|matic"],
+    "Ramps: Network|Bitcoin": [r"bitcoin|btc"],
+    "Ramps: Network|BNB Smart Chain": [r"bnb\s+smart\s+chain|bsc"],
+    "Ramps: Network|Base": [r"\bbase\b"],
+    "Ramps: Network|Unknown": [r"unknown\s+network"],
+    "Ramps: Network|Ethereum": [r"ethereum|eth(\s+mainnet)?"],
+}
+
+DASHBOARD_TAXONOMY: dict[str, list[str]] = {
+    # Network
+    "Dashboard: Network|Polygon": [r"polygon|matic"],
+    "Dashboard: Network|BNB Smart Chain": [r"bnb\s+smart\s+chain|bsc"],
+    "Dashboard: Network|Arbitrum": [r"arbitrum"],
+    "Dashboard: Network|Linea": [r"linea"],
+    "Dashboard: Network|Unknown": [r"unknown\s+network"],
+    "Dashboard: Network|Ethereum": [r"ethereum|eth(\s+mainnet)?"],
+    # Issue
+    "Dashboard: Issue|Dashboard Feature request": [r"feature\s+request"],
+    "Dashboard: Issue|Account Issue": [r"account\s+issue"],
+    "Dashboard: Issue|MetaMask Missions Campaign": [r"missions?\s+campaign"],
+    "Dashboard: Issue|Token/NFT Issue": [r"token|nft\s+issue"],
+    "Dashboard: Issue|Balance/Fiat Issue": [r"(balance|fiat)\s+issue"],
+    "Dashboard: Issue|Transaction Issue": [r"transaction\s+issue"],
+    "Dashboard: Issue|User Training": [r"user\s+training|how\s+to"],
+    # Platform
+    "Dashboard: Platform|Portfolio": [r"portfolio"],
+    "Dashboard: Platform|Extension": [r"extension"],
+    "Dashboard: Platform|Mobile": [r"mobile"],
+    # Portfolio User Training
+    "Portfolio User Training|Importing a token/NFT": [r"import(ing)?\s+(a\s+)?(token|nft)"],
+    "Portfolio User Training|Airdrops": [r"airdrops?"],
+    "Portfolio User Training|General Question": [r"general\s+question"],
+    "Portfolio User Training|Send/Receive/Transfer funds": [r"(send|receive|transfer)\s+funds"],
+    "Portfolio User Training|Connecting an account": [r"connecting\s+an\s+account"],
+    "Portfolio User Training|Dapp tab": [r"dapp\s+tab"],
+    # Balance issue
+    "Dashboard: Balance issue|Incorrect/Missing Price Data": [r"incorrect|missing\s+price\s+data"],
+    "Dashboard: Balance issue|Incorrect Token Balance": [r"incorrect\s+token\s+balance"],
+    "Dashboard: Balance issue|No Token/Fiat Balance": [r"no\s+(token|fiat)\s+balance"],
+    # Account issue
+    "Dashboard: Account issue|Watched account not in MetaMask": [r"watched\s+account\s+not\s+in\s+metamask"],
+    "Dashboard: Account issue|Connecting or accessing new account": [r"(connecting|accessing)\s+new\s+account"],
+    "Dashboard: Account issue|Managing an account": [r"managing\s+an\s+account"],
+    "Dashboard: Account issue|Removing an account": [r"removing\s+an\s+account"],
+    # Tokens issue
+    "Dashboard: Tokens issue|Token/NFT not displaying properly": [r"not\s+display(ing)?\s+properly"],
+    "Dashboard: Tokens issue|Token/NFT import": [r"(token|nft)\s+import"],
+}
+
+WALLET_TAXONOMY: dict[str, list[str]] = {
+    # Issue
+    "Wallet: Issue|External dApp issue": [r"(external\s+)?dapp\s+issue|not\s+meta\s?mask\s+related"],
+    "Wallet: Issue|Balance issue": [r"balance\s+issue"],
+    "Wallet: Issue|Opening MetaMask": [r"opening\s+metamask|slow\s+password\s+opening"],
+    "Wallet: Issue|User training": [r"user\s+training|how\s+to"],
+    "Wallet: Issue|Other": [r"wallet.*other"],
+    "Wallet: Issue|Transaction issue": [r"transaction\s+issue"],
+    "Wallet: Issue|Back-up or restore": [r"back[- ]?up|restore"],
+    # Platform
+    "Wallet: Platform|Portfolio": [r"portfolio"],
+    "Wallet: Platform|Extension": [r"extension"],
+    "Wallet: Platform|Mobile": [r"mobile"],
+    # Network
+    "Wallet: Network|Arbitrum": [r"arbitrum"],
+    "Wallet: Network|BNB Smart Chain": [r"bnb\s+smart\s+chain|bsc"],
+    "Wallet: Network|Solana": [r"solana"],
+    "Wallet: Network|Ethereum": [r"ethereum|eth(\s+mainnet)?"],
+    "Wallet: Network|Base": [r"\bbase\b"],
+    # User training
+    "Wallet: User training|Tokens sent on wrong network": [r"tokens?\s+sent\s+on\s+wrong\s+network"],
+    "Wallet: User training|Custom network not added": [r"custom\s+network\s+not\s+added"],
+    "Wallet: User training|General Question": [r"general\s+question"],
+    "Wallet: User training|Tokens sent to smart contract": [r"tokens?\s+sent\s+to\s+smart\s+contract"],
+    "Wallet: User training|Token not imported": [r"token\s+not\s+imported"],
+    "Wallet: User training|Tokens sent to wrong address": [r"tokens?\s+sent\s+to\s+wrong\s+address"],
+    "Wallet: User training|Not enough gas": [r"not\s+enough\s+gas"],
+    # Transaction issue
+    "Wallet: Transaction issue|FLI due to tx and signature": [r"fli\s+due\s+to\s+tx\s+and\s+signature"],
+    "Wallet: Transaction issue|Pending transaction (local)": [r"pending\s+transaction\s*\(local\)"],
+    "Wallet: Transaction issue|Failed transaction (on-chain)": [r"failed\s+transaction\s*\(on[- ]?chain\)"],
+    "Wallet: Transaction issue|Pending transaction (on-chain)": [r"pending\s+transaction\s*\(on[- ]?chain\)"],
+    "Wallet: Transaction issue|Failed transaction (local)": [r"failed\s+transaction\s*\(local\)"],
+    # Back-up or restore
+    "Wallet: Back-up or restore|SRP/PK not valid": [r"(srp|seed\s+phrase|private\s+key)\s+not\s+valid"],
+    "Wallet: Back-up or restore|SRP/PK never backed up": [r"(srp|seed\s+phrase|private\s+key).*never\s+back(ed)?\s+up"],
+    "Wallet: Back-up or restore|SRP/PK restored wrong account": [r"restor(ed|ing)\s+wrong\s+account"],
+    "Wallet: Back-up or restore|Imported loose account(s)": [r"imported\s+loose\s+account"],
+    "Wallet: Back-up or restore|Password issue": [r"password\s+issue"],
+    "Wallet: Back-up or restore|SRP/PK and password lost": [r"(srp|seed\s+phrase|private\s+key).*password\s+lost"],
+    # External Dapp issue
+    "Wallet: External Dapp issue|Not receiving prompt from Dapp": [r"not\s+receiving\s+prompt\s+from\s+dapp"],
+    "Wallet: External Dapp issue|Connectivity to Dapp": [r"connect(ion|ivity)\s+to\s+dapp"],
+    "Wallet: External Dapp issue|Not MetaMask related": [r"not\s+metamask\s+related"],
+    "Wallet: External Dapp issue|Dapp issue": [r"dapp\s+issue"],
+    # Hardware wallet
+    "Wallet: Hardware wallet|Other HW": [r"other\s+hw|other\s+hardware"],
+    "Wallet: Hardware wallet|Keystone QR": [r"keystone\s+qr"],
+    "Wallet: Hardware wallet|Trezor": [r"trezor"],
+    "Wallet: Hardware wallet|Ledger": [r"ledger"],
+    # Hardware wallet issue
+    "Wallet: Hardware wallet issue|Unable to add account to MetaMask": [r"unable\s+to\s+add\s+account\s+to\s+metamask"],
+    "Wallet: Hardware wallet issue|Failed transaction": [r"failed\s+transaction"],
+    "Wallet: Hardware wallet issue|Unable to sign tx on device": [r"unable\s+to\s+sign\s+tx\s+on\s+device"],
+    # NFT issue
+    "Wallet: NFT issue|NFT display issue": [r"nft\s+display\s+issue"],
+    "Wallet: NFT issue|Transferring an NFT": [r"transferring\s+an\s+nft|nft\s+transfer"],
+    "Wallet: NFT issue|Importing an NFT": [r"import(ing)?\s+an\s+nft"],
+}
+
+def _get_area_taxonomy(area: str) -> Optional[dict[str, list[str]]]:
+    if area == "Swaps":
+        return SWAPS_TAXONOMY
+    if area == "Ramps":
+        return RAMPS_TAXONOMY
+    if area == "Dashboard":
+        return DASHBOARD_TAXONOMY
+    if area == "Wallet":
+        return WALLET_TAXONOMY
+    if area == "Security":
+        return SECURITY_TAXONOMY
+    return None
+
+# ---------------------------
 # Area detection helpers
 # ---------------------------
 
@@ -966,7 +1218,7 @@ def analyze_xlsx_and_generate_insights(
             issue_texts = df.loc[issue_mask, "combined_text"].astype(str).fillna("").tolist()
         all_issue_texts_for_takeaways.extend(issue_texts)
 
-        # Security-specific diagnostics
+        # Area-specific diagnostics
         if meta_mask_area == "Security":
             total_issue_conversations = max(1, len(issue_texts))
             issue_key = (issue or "").lower()
@@ -998,6 +1250,22 @@ def analyze_xlsx_and_generate_insights(
                     for dom, dcnt in top_domains:
                         pct = dcnt / total_issue_conversations * 100.0
                         lines.append(f"- {dom}: {dcnt:,} ({pct:.1f}%)")
+        # Generic taxonomy diagnostics for other areas (Swaps, Ramps, Dashboard, Wallet)
+        if meta_mask_area in ("Swaps", "Ramps", "Dashboard", "Wallet"):
+            total_issue_conversations = max(1, len(issue_texts))
+            area_tax = _get_area_taxonomy(meta_mask_area)
+            if area_tax:
+                tax_scores = _score_taxonomy(issue_texts, area_tax, top_n=8)
+                if tax_scores:
+                    lines.append("Related classifications:")
+                    for label, rcnt in tax_scores:
+                        pct = rcnt / total_issue_conversations * 100.0
+                        if "|" in label:
+                            cat, val = label.split("|", 1)
+                            lines.append(f"- {cat}: {val} — {rcnt:,} ({pct:.1f}%)")
+                        else:
+                            lines.append(f"- {label}: {rcnt:,} ({pct:.1f}%)")
+
         # Prefer theme-based explanations when available
         theme_scores = _score_themes(issue_texts, meta_mask_area, max_themes=5)
         if theme_scores:
