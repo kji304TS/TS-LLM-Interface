@@ -544,6 +544,115 @@ WALLET_TAXONOMY: dict[str, list[str]] = {
     "Wallet: NFT issue|Importing an NFT": [r"import(ing)?\s+an\s+nft"],
 }
 
+STAKING_TAXONOMY: dict[str, list[str]] = {
+    # Feature
+    "Staking: Feature|Stablecoin Lending issue": [r"stablecoin\s+lending\s+issue"],
+    "Staking: Feature|Validator Staking issue": [r"validator\s+staking\s+issue"],
+    "Staking: Feature|Liquid Staking": [r"liquid\s+staking"],
+    "Staking: Feature|Pooled Staking issue": [r"pooled\s+staking\s+issue"],
+    "Staking: Feature|Third Party Staking": [r"third\s+party\s+staking"],
+    # Platform
+    "Staking: Platform|Extension": [r"extension"],
+    "Staking: Platform|Portfolio": [r"portfolio"],
+    "Staking: Platform|Mobile": [r"mobile"],
+    # Issue
+    "Staking: Issue|Other": [r"staking.*other"],
+    "Staking: Issue|User Training": [r"user\s+training|how\s+to\s+stake"],
+    "Staking: Issue|Can't stake my tokens": [r"can'?t\s+stake\s+my\s+tokens"],
+    "Staking: Issue|Managing staked tokens": [r"managing\s+staked\s+tokens"],
+    "Staking: Issue|Failed transaction": [r"failed\s+transaction"],
+    "Staking: Issue|Withdrawing": [r"withdrawing|withdraw(al)?"],
+    # Network
+    "Staking: Network|Base": [r"\bbase\b"],
+    "Staking: Network|BNB Smart Chain": [r"bnb\s+smart\s+chain|bsc"],
+    "Staking: Network|Bitcoin": [r"bitcoin|btc"],
+    "Staking: Network|Ethereum": [r"ethereum|eth(\s+mainnet)?"],
+    "Staking: Network|Optimism": [r"optimism"],
+    # Liquid Staking Provider
+    "Liquid Staking: Provider|Lido": [r"lido"],
+    # Withdrawal issue
+    "Staking: Withdrawal issue|User Error": [r"user\s+error"],
+    "Staking: Withdrawal issue|Platform Error": [r"platform\s+error"],
+    "Staking: Withdrawal issue|Other": [r"withdraw(al)?.*other"],
+    # Failed transaction issue
+    "Staking: Failed transaction issue|Failed locally": [r"failed\s+locally"],
+    # User Training details
+    "Staking: User Training|How to stake": [r"how\s+to\s+stake"],
+    "Staking: User Training|What is staking": [r"what\s+is\s+staking"],
+    "Staking: User Training|How to Claim rewards": [r"how\s+to\s+claim\s+rewards"],
+    "Staking: User Training|How to unstake": [r"how\s+to\s+unstake"],
+}
+
+SNAPS_TAXONOMY: dict[str, list[str]] = {
+    # Platform
+    "Snaps: Platform|Extension": [r"extension"],
+    # Network
+    "Snaps: Network|Ethereum": [r"ethereum|eth"],
+    "Snaps: Network|Solana": [r"solana"],
+    "Snaps: Network|Bitcoin": [r"bitcoin|btc"],
+    "Snaps: Network|Starknet": [r"starknet"],
+    # Issue
+    "Snaps: Issue|General Question": [r"general\s+question"],
+    "Snaps: Issue|Connectivity issue": [r"connect(ion|ivity)\s+issue"],
+    "Snaps: Issue|Installation issue": [r"install(ation)?\s+issue"],
+    "Snaps: Issue|Transaction issue": [r"transaction\s+issue"],
+    "Snaps: Issue|Key Management issue": [r"key\s+management\s+issue"],
+    "Snaps: Issue|Allowlist request": [r"allowlist\s+request"],
+    # Client
+    "Snaps: Client|MetaMask": [r"metamask"],
+    "Snaps: Client|MetaMask Flask": [r"flask"],
+}
+
+CARD_TAXONOMY: dict[str, list[str]] = {
+    # Closed Conversations by Network
+    "Closed Conversations by Network|BNB Smart Chain": [r"bnb\s+smart\s+chain|bsc"],
+    "Closed Conversations by Network|Base": [r"\bbase\b"],
+    "Closed Conversations by Network|Linea": [r"linea"],
+    "Closed Conversations by Network|Polygon": [r"polygon|matic"],
+    "Closed Conversations by Network|Arbitrum": [r"arbitrum"],
+    "Closed Conversations by Network|Solana": [r"solana"],
+    "Closed Conversations by Network|Ethereum": [r"ethereum|eth(\s+mainnet)?"],
+    # MM Card Issues segmented
+    "MM Card Issues segmented|Wallet restore issue or SRP lost": [r"wallet\s+restore\s+issue|srp\s+lost|seed\s+phrase\s+lost"],
+    "MM Card Issues segmented|Error in buy flow": [r"error\s+in\s+buy\s+flow"],
+    "MM Card Issues segmented|Refunds": [r"refunds?"],
+    "MM Card Issues segmented|User training": [r"user\s+training|how\s+to"],
+    "MM Card Issues segmented|Security": [r"security"],
+    "MM Card Issues segmented|Approval Spending Cap Only": [r"approval\s+spending\s+cap\s+only"],
+    "MM Card Issues segmented|Transaction failure": [r"transaction\s+failure|failed\s+transaction"],
+    "MM Card Issues segmented|Other": [r"card.*other"],
+    "MM Card Issues segmented|Purchase failed": [r"purchase\s+failed"],
+    "MM Card Issues segmented|Withdrawal Issues": [r"withdraw(al)?\s+issues"],
+    "MM Card Issues segmented|Partner issue": [r"partner\s+issue"],
+    # MM Card Swap Issues segmented
+    "MM Card Swap Issues segmented|User Training": [r"user\s+training"],
+    "MM Card Swap Issues segmented|Failed Transaction": [r"failed\s+transaction"],
+    # MM Card Partner Issues segmented
+    "MM Card Partner Issues segmented|Reset password": [r"reset\s+password"],
+    "MM Card Partner Issues segmented|Wants to change email": [r"change\s+email"],
+    "MM Card Partner Issues segmented|Wants to chnge phone number": [r"change\s+phone\s+number"],
+    "MM Card Partner Issues segmented|Didn't receive confirmation email": [r"did(n't| not)\s+receive\s+confirmation\s+email"],
+    "MM Card Partner Issues segmented|Didn't receive confirmation SMS": [r"did(n't| not)\s+receive\s+confirmation\s+sms"],
+    "MM Card Partner Issues segmented|Didn't receive password reset email": [r"did(n't| not)\s+receive\s+password\s+reset\s+email"],
+    "MM Card Partner Issues segmented|Dashboard Issue": [r"dashboard\s+issue"],
+    "MM Card Partner Issues segmented|KYC Issue": [r"kyc\s+issue"],
+    "MM Card Partner Issues segmented|Other": [r"partner.*other"],
+    # MM Card Bridge Issues segmented
+    "MM Card Bridge Issues segemented|Failed transaction": [r"failed\s+transaction"],
+    "MM Card Bridge Issues segemented|User Training": [r"user\s+training"],
+    # AI Topic
+    "AI Topic|Card integration": [r"card\s+integration"],
+    "AI Topic|Card troubleshooting": [r"card\s+troubleshooting"],
+    "AI Topic|Email confirmation": [r"email\s+confirmation"],
+    "AI Topic|Card account disabling": [r"account\s+disabl(ing|ed)"],
+    "AI Topic|Wallet creation": [r"wallet\s+creation"],
+    "AI Topic|Fund transfers": [r"fund\s+transfers"],
+    "AI Topic|Gas fees": [r"gas\s+fees?"],
+    "AI Topic|KYC process and verification issues": [r"kyc\s+process|verification\s+issues"],
+    "AI Topic|Wallet balances": [r"wallet\s+balances?"],
+    "AI Topic|Account updates": [r"account\s+updates?"],
+}
+
 def _get_area_taxonomy(area: str) -> Optional[dict[str, list[str]]]:
     if area == "Swaps":
         return SWAPS_TAXONOMY
@@ -553,6 +662,12 @@ def _get_area_taxonomy(area: str) -> Optional[dict[str, list[str]]]:
         return DASHBOARD_TAXONOMY
     if area == "Wallet":
         return WALLET_TAXONOMY
+    if area == "Staking":
+        return STAKING_TAXONOMY
+    if area == "Snaps":
+        return SNAPS_TAXONOMY
+    if area == "Card":
+        return CARD_TAXONOMY
     if area == "Security":
         return SECURITY_TAXONOMY
     return None
