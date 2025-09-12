@@ -788,6 +788,61 @@ NON_ISSUE_COLUMN_NAMES: Set[str] = set([
     "MM Travel",
 ])
 
+# Per-area issue source columns prioritized. We count by these categories dynamically.
+AREA_ISSUE_SOURCES: Dict[str, List[str]] = {
+    "Wallet": [
+        "Wallet issue",
+        "User training",
+        "Transaction issue",
+        "Balance issue",
+        "Back-up or restore",
+        "External dApp issue",
+        "NFT issue",
+        "Opening MetaMask",
+        "Confirmation issue",
+        "Hardware wallet issue",
+        "Hawrdware wallet issue",
+    ],
+    "Dashboard": [
+        "Dashboard: Issue",
+        "Dashboard Feature request",
+        "Account issue",
+        "Token/NFT Issue",
+        "Balance/Fiat Issue",
+        "Portfolio Transaction issues",
+        "Portfolio User Training",
+    ],
+    "Ramps": [
+        "Buy issue",
+        "Sell issue",
+        "Buy or Sell",
+    ],
+    "Swaps": [
+        "Swaps issue",
+        "Native Swaps issue",
+    ],
+    "Card": [
+        "MM Card Issue",
+        "MM Card Partner issue",
+    ],
+    "Staking": [
+        "Stablecoin Lending issue",
+        "Validator Staking issue",
+        "Pooled Staking issue",
+        "Liquid Staking",
+        "Third Party Staking Issue",
+    ],
+    "Security": [
+        "SRP/PK compromised",
+        "Unintended contract interaction",
+        "User error",
+        "No funds lost",
+    ],
+    "Snaps": [
+        "Snaps: Issue",
+        "Snaps Category",
+    ],
+}
 
 def _normalize_area_string(value: str) -> str:
     v = (value or "").strip().lower()
@@ -1394,6 +1449,66 @@ def _theme_pattern(area: str, theme_name: str) -> Optional[re.Pattern]:
     return None
 
 
+def _series_nonempty_mask(series: pd.Series) -> pd.Series:
+    s = series.astype(str).str.strip()
+    s = s.replace({"nan": "", "None": "", "N/A": ""})
+    return s != ""
+
+
+def _compute_top_issues(df: pd.DataFrame, area: str) -> tuple[List[tuple[str, int]], Dict[str, pd.Series]]:
+    """Compute top issues based on provided category columns for the area.
+    Returns (sorted_issues, label_to_mask)."""
+    label_to_count: Dict[str, int] = {}
+    label_to_mask: Dict[str, pd.Series] = {}
+    source_cols = [c for c in AREA_ISSUE_SOURCES.get(area, []) if c in df.columns]
+
+    if not source_cols:
+        return [], {}
+
+    for col in source_cols:
+        col_series = df[col]
+        # If column appears to have categorical values (strings beyond empty), count by value
+        # Otherwise treat presence in the column as the issue named by the column itself
+        nonempty_mask = _series_nonempty_mask(col_series)
+        if nonempty_mask.sum() == 0:
+            continue
+        # Heuristic: if there are multiple distinct non-empty values and the column name ends with 'issue' or contains ':'
+        distinct_vals = (
+            col_series[nonempty_mask].astype(str).str.strip().replace({"nan": ""}).value_counts()
+        )
+        if len(distinct_vals.index) > 1 or any(x in col.lower() for x in ["issue", ":"]):
+            # Count by values
+            for val, cnt in distinct_vals.items():
+                if not val:
+                    continue
+                label = val
+                label_to_count[label] = label_to_count.get(label, 0) + int(cnt)
+                mask = col_series.astype(str).str.strip().eq(val)
+                if label in label_to_mask:
+                    label_to_mask[label] = label_to_mask[label] | mask
+                else:
+                    label_to_mask[label] = mask
+        else:
+            # Treat the column name as the issue label
+            label = col
+            cnt = int(nonempty_mask.sum())
+            label_to_count[label] = label_to_count.get(label, 0) + cnt
+            if label in label_to_mask:
+                label_to_mask[label] = label_to_mask[label] | nonempty_mask
+            else:
+                label_to_mask[label] = nonempty_mask
+
+    # Remove known non-issue labels if they slipped in
+    for bad in list(label_to_count.keys()):
+        if bad in NON_ISSUE_COLUMN_NAMES:
+            label_to_count.pop(bad, None)
+            label_to_mask.pop(bad, None)
+
+    # Rank and take top 3
+    sorted_issues = sorted(label_to_count.items(), key=lambda kv: (-kv[1], kv[0]))[:3]
+    return sorted_issues, label_to_mask
+
+
 def analyze_xlsx_and_generate_insights(
     xlsx_file: str, meta_mask_area: str, week_start_str: str, week_end_str: str
 ) -> str:
@@ -1401,7 +1516,14 @@ def analyze_xlsx_and_generate_insights(
     df = pd.read_excel(xlsx_file)
     df.columns = df.columns.str.strip()
 
-    issue_col = _pick_primary_issue_column(df, meta_mask_area)
+    # Compute top issues via category sources first
+    top_issue_list, issue_masks = _compute_top_issues(df, meta_mask_area)
+
+    issue_col = None  # legacy path disabled when dynamic issues are present
+    if not top_issue_list:
+        # Fallback to legacy single-column heuristic if no sources available
+        issue_col = _pick_primary_issue_column(df, meta_mask_area)
+
     insights_file = os.path.join(
         INSIGHTS_DIR,
         f"{meta_mask_area.lower()}_insights_{week_start_str}_to_{week_end_str}.txt",
@@ -1428,29 +1550,33 @@ def analyze_xlsx_and_generate_insights(
     issues_series = None
     top_counts = None
 
-    if issue_col is None:
-        area_texts_all = df["combined_text"].astype(str).fillna("").tolist()
-        theme_scores_all = _score_themes(area_texts_all, meta_mask_area, max_themes=3)
-        if theme_scores_all:
-            synthesized_issues = [(name, score) for name, score in theme_scores_all]
-        else:
-            # last-resort: use top phrases to create pseudo-issues with count 1 each
-            phrases = _top_phrases(area_texts_all, max_phrases=3)
-            synthesized_issues = [(p.title(), 1) for p in phrases] if phrases else []
+    if top_issue_list:
+        # Use dynamic issues
+        top_counts = top_issue_list
     else:
-        issues_series = (
-            df[issue_col]
-            .astype(str)
-            .str.strip()
-            .replace({"nan": None, "None": None, "N/A": None, "": None})
-            .dropna()
-        )
-        top_counts = issues_series.value_counts().head(3)
-        if top_counts.empty:
-            area_texts = df["combined_text"].astype(str).fillna("").tolist()
-            theme_scores = _score_themes(area_texts, meta_mask_area, max_themes=3)
-            if theme_scores:
-                synthesized_issues = [(name, score) for name, score in theme_scores]
+        if issue_col is None:
+            area_texts_all = df["combined_text"].astype(str).fillna("").tolist()
+            theme_scores_all = _score_themes(area_texts_all, meta_mask_area, max_themes=3)
+            if theme_scores_all:
+                synthesized_issues = [(name, score) for name, score in theme_scores_all]
+            else:
+                phrases = _top_phrases(area_texts_all, max_phrases=3)
+                synthesized_issues = [(p.title(), 1) for p in phrases] if phrases else []
+        else:
+            issues_series = (
+                df[issue_col]
+                .astype(str)
+                .str.strip()
+                .replace({"nan": None, "None": None, "N/A": None, "": None})
+                .dropna()
+            )
+            vc = issues_series.value_counts().head(3)
+            top_counts = list(vc.items())
+            if not top_counts:
+                area_texts = df["combined_text"].astype(str).fillna("").tolist()
+                theme_scores = _score_themes(area_texts, meta_mask_area, max_themes=3)
+                if theme_scores:
+                    synthesized_issues = [(name, score) for name, score in theme_scores]
 
     total_area_rows = len(df)
 
@@ -1474,7 +1600,7 @@ def analyze_xlsx_and_generate_insights(
             pct = (cnt / total_area_rows * 100.0) if total_area_rows else 0.0
             lines.append(f"{issue}\t{cnt:,}\t{pct:.1f}%")
     else:
-        for issue, cnt in top_counts.items():
+        for issue, cnt in top_counts:
             pct = (cnt / total_area_rows * 100.0) if total_area_rows else 0.0
             lines.append(f"{issue}\t{cnt:,}\t{pct:.1f}%")
 
@@ -1484,7 +1610,7 @@ def analyze_xlsx_and_generate_insights(
     if synthesized_issues is not None:
         issue_iterable = synthesized_issues
     else:
-        issue_iterable = list(top_counts.items())
+        issue_iterable = list(top_counts)
 
     def _clean_sample(text: str, limit: int = 240) -> str:
         t = remove_html_tags(text or "").strip()
@@ -1501,10 +1627,18 @@ def analyze_xlsx_and_generate_insights(
             patt = _theme_pattern(meta_mask_area, issue)
             all_texts = df["combined_text"].astype(str).fillna("").tolist()
             issue_texts = [t for t in all_texts if patt and patt.search(t)]
+            current_mask = None
         else:
-            issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
-            issue_mask = issue_mask.reindex(df.index, fill_value=False)
-            issue_texts = df.loc[issue_mask, "combined_text"].astype(str).fillna("").tolist()
+            if top_issue_list:
+                current_mask = issue_masks.get(issue)
+                if current_mask is None:
+                    current_mask = pd.Series([False] * len(df))
+                issue_texts = df.loc[current_mask, "combined_text"].astype(str).fillna("").tolist()
+            else:
+                issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
+                issue_mask = issue_mask.reindex(df.index, fill_value=False)
+                current_mask = issue_mask
+                issue_texts = df.loc[current_mask, "combined_text"].astype(str).fillna("").tolist()
         all_issue_texts_for_takeaways.extend(issue_texts)
 
         # Area-specific diagnostics
@@ -1586,7 +1720,10 @@ def analyze_xlsx_and_generate_insights(
         lines.append("Representative examples:")
         examples = []
         if synthesized_issues is None and 'summary' in df.columns:
-            subset = df.loc[issue_mask, 'summary'].astype(str).fillna("")
+            if top_issue_list:
+                subset = df.loc[current_mask, 'summary'].astype(str).fillna("")
+            else:
+                subset = df.loc[issue_mask, 'summary'].astype(str).fillna("")
             for s in subset.head(5).tolist():
                 cleaned = _clean_sample(s)
                 if cleaned and not _is_low_signal(cleaned):
@@ -1595,9 +1732,11 @@ def analyze_xlsx_and_generate_insights(
                     break
         if len(examples) < 3 and 'transcript' in df.columns:
             if synthesized_issues is None:
-                tsubset = df.loc[issue_mask, 'transcript'].astype(str).fillna("")
+                if top_issue_list:
+                    tsubset = df.loc[current_mask, 'transcript'].astype(str).fillna("")
+                else:
+                    tsubset = df.loc[issue_mask, 'transcript'].astype(str).fillna("")
             else:
-                # Filter transcripts by theme pattern when synthesized
                 patt = _theme_pattern(meta_mask_area, issue)
                 all_transcripts = df['transcript'].astype(str).fillna("")
                 mask = all_transcripts.apply(lambda s: bool(patt.search(s)) if patt and isinstance(s, str) else False)
