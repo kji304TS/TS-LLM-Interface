@@ -745,6 +745,7 @@ KNOWN_ISSUE_COLUMN_HINTS: Dict[str, List[str]] = {
         "Opening MetaMask",
         "Transaction issue",
         "User training",
+        "Balance issue",
     ],
     "Dashboard": [
         "Dashboard Feature request",
@@ -776,6 +777,16 @@ KNOWN_ISSUE_COLUMN_HINTS: Dict[str, List[str]] = {
         "MM Card Partner issue",
     ],
 }
+
+# Columns that are not issues and must be excluded from primary issue detection
+NON_ISSUE_COLUMN_NAMES: Set[str] = set([
+    "User type",
+    "Developer?",
+    "MetaMask platform",
+    "Extension OS",
+    "Network",
+    "MM Travel",
+])
 
 
 def _normalize_area_string(value: str) -> str:
@@ -1260,13 +1271,13 @@ def _pick_primary_issue_column(df: pd.DataFrame, area: str) -> Optional[str]:
     for c in df.columns:
         if c in ("conversation_id", "summary", "transcript", "combined_text", "state", "created_at_iso", "updated_at_iso", "last_close_at_iso"):
             continue
+        if c in NON_ISSUE_COLUMN_NAMES:
+            continue
         if regex_hints.search(str(c)) and c not in candidates:
             candidates.append(c)
 
-    # 4) Try known attribute names
-    for name in KNOWN_ATTRIBUTE_NAMES:
-        if name in df.columns and name not in candidates:
-            candidates.append(name)
+    # Never consider known non-issue fields
+    candidates = [c for c in candidates if c not in NON_ISSUE_COLUMN_NAMES]
 
     if not candidates:
         return None
@@ -1451,7 +1462,8 @@ def analyze_xlsx_and_generate_insights(
     lines.append(f"Conversation Volume Analyzed: {total_area_rows:,} total")
     if total_area_rows:
         esc_pct = (escalation_count / total_area_rows * 100.0) if total_area_rows else 0.0
-        lines.append(f"Escalated to Technical Support: {escalation_count:,} ({esc_pct:.1f}%)")
+        # Replace with simplified phrasing without percentage
+        lines.append(f"Conversations Elevated to Technical Support: {escalation_count:,}")
     lines.append(f"Focus: Top 3 {meta_mask_area} Issues by Volume")
     lines.append("")
     lines.append(f"📊 Top 3 {meta_mask_area} Issues")
@@ -1528,7 +1540,7 @@ def analyze_xlsx_and_generate_insights(
                         pct = dcnt / total_issue_conversations * 100.0
                         lines.append(f"- {dom}: {dcnt:,} ({pct:.1f}%)")
         # Generic taxonomy diagnostics for other areas (Swaps, Ramps, Dashboard, Wallet)
-        if meta_mask_area in ("Swaps", "Ramps", "Dashboard", "Wallet"):
+        if meta_mask_area in ("Swaps", "Ramps", "Dashboard"):
             total_issue_conversations = max(1, len(issue_texts))
             area_tax = _get_area_taxonomy(meta_mask_area)
             if area_tax:
