@@ -1497,23 +1497,14 @@ def analyze_xlsx_and_generate_insights(
     df = pd.read_excel(xlsx_file)
     df.columns = df.columns.str.strip()
 
-    # Compute top issues via category sources first
-    top_issue_list, issue_masks = _compute_top_issues(df, meta_mask_area)
+    # Determine if area has category columns in this dataset
+    source_cols_present = [c for c in AREA_ISSUE_SOURCES.get(meta_mask_area, []) if c in df.columns]
 
-    # If categories are too sparse (e.g., only 0-1 categories present), prefer theme-based synthesis
-    if len(top_issue_list) < 2:
-        top_issue_list = []
-        issue_masks = {}
-
-    issue_col = None  # legacy path disabled when dynamic issues are present
-    if not top_issue_list:
-        # Fallback to legacy single-column heuristic if no sources available
-        issue_col = _pick_primary_issue_column(df, meta_mask_area)
-
-    insights_file = os.path.join(
-        INSIGHTS_DIR,
-        f"{meta_mask_area.lower()}_insights_{week_start_str}_to_{week_end_str}.txt",
-    )
+    # Compute top issues via category sources if present; otherwise synthesize via themes
+    top_issue_list: List[tuple[str, int]] = []
+    issue_masks: Dict[str, pd.Series] = {}
+    if source_cols_present:
+        top_issue_list, issue_masks = _compute_top_issues(df, meta_mask_area)
 
     # Ensure combined_text exists early for all paths
     if "combined_text" not in df.columns:
@@ -1531,38 +1522,21 @@ def analyze_xlsx_and_generate_insights(
     else:
         escalation_count = 0
 
-    # If no taxonomy column exists, synthesize issues directly from area themes
+    # Decide issue list source
     synthesized_issues = None
-    issues_series = None
     top_counts = None
 
-    if top_issue_list:
-        # Use dynamic issues
-        top_counts = top_issue_list
-    else:
-        if issue_col is None:
-            area_texts_all = df["combined_text"].astype(str).fillna("").tolist()
-            theme_scores_all = _score_themes(area_texts_all, meta_mask_area, max_themes=3)
-            if theme_scores_all:
-                synthesized_issues = [(name, score) for name, score in theme_scores_all]
-            else:
-                phrases = _top_phrases(area_texts_all, max_phrases=3)
-                synthesized_issues = [(p.title(), 1) for p in phrases] if phrases else []
+    if not source_cols_present or not top_issue_list:
+        # No categories available — use theme-based issues
+        area_texts_all = df["combined_text"].astype(str).fillna("").tolist()
+        theme_scores_all = _score_themes(area_texts_all, meta_mask_area, max_themes=3)
+        if theme_scores_all:
+            synthesized_issues = [(name, score) for name, score in theme_scores_all]
         else:
-            issues_series = (
-                df[issue_col]
-                .astype(str)
-                .str.strip()
-                .replace({"nan": None, "None": None, "N/A": None, "": None})
-                .dropna()
-            )
-            vc = issues_series.value_counts().head(3)
-            top_counts = list(vc.items())
-            if not top_counts:
-                area_texts = df["combined_text"].astype(str).fillna("").tolist()
-                theme_scores = _score_themes(area_texts, meta_mask_area, max_themes=3)
-                if theme_scores:
-                    synthesized_issues = [(name, score) for name, score in theme_scores]
+            phrases = _top_phrases(area_texts_all, max_phrases=3)
+            synthesized_issues = [(p.title(), 1) for p in phrases] if phrases else []
+    else:
+        top_counts = top_issue_list
 
     total_area_rows = len(df)
 
@@ -1619,16 +1593,10 @@ def analyze_xlsx_and_generate_insights(
             issue_texts = [t for t in all_texts if patt and patt.search(t)]
             current_mask = None
         else:
-            if top_issue_list:
-                current_mask = issue_masks.get(issue)
-                if current_mask is None:
-                    current_mask = pd.Series([False] * len(df))
-                issue_texts = df.loc[current_mask, "combined_text"].astype(str).fillna("").tolist()
-            else:
-                issue_mask = df[issue_col].astype(str).str.strip().eq(str(issue))
-                issue_mask = issue_mask.reindex(df.index, fill_value=False)
-                current_mask = issue_mask
-                issue_texts = df.loc[current_mask, "combined_text"].astype(str).fillna("").tolist()
+            current_mask = issue_masks.get(issue)
+            if current_mask is None:
+                current_mask = pd.Series([False] * len(df))
+            issue_texts = df.loc[current_mask, "combined_text"].astype(str).fillna("").tolist()
         all_issue_texts_for_takeaways.extend(issue_texts)
 
         # Area-specific diagnostics
@@ -1710,10 +1678,7 @@ def analyze_xlsx_and_generate_insights(
         lines.append("Representative examples:")
         examples = []
         if synthesized_issues is None and 'summary' in df.columns:
-            if top_issue_list:
-                subset = df.loc[current_mask, 'summary'].astype(str).fillna("")
-            else:
-                subset = df.loc[issue_mask, 'summary'].astype(str).fillna("")
+            subset = df.loc[current_mask, 'summary'].astype(str).fillna("")
             for s in subset.head(5).tolist():
                 cleaned = _clean_sample(s)
                 if cleaned and not _is_low_signal(cleaned):
@@ -1722,11 +1687,9 @@ def analyze_xlsx_and_generate_insights(
                     break
         if len(examples) < 3 and 'transcript' in df.columns:
             if synthesized_issues is None:
-                if top_issue_list:
-                    tsubset = df.loc[current_mask, 'transcript'].astype(str).fillna("")
-                else:
-                    tsubset = df.loc[issue_mask, 'transcript'].astype(str).fillna("")
+                tsubset = df.loc[current_mask, 'transcript'].astype(str).fillna("")
             else:
+                # Filter transcripts by theme pattern when synthesized
                 patt = _theme_pattern(meta_mask_area, issue)
                 all_transcripts = df['transcript'].astype(str).fillna("")
                 mask = all_transcripts.apply(lambda s: bool(patt.search(s)) if patt and isinstance(s, str) else False)
@@ -1764,6 +1727,11 @@ def analyze_xlsx_and_generate_insights(
                 lines.append(f"✅ {rec}")
                 rec_added.add(rec)
     lines.append("✅ Consider proactive guidance and clearer in-product messaging to reduce repeat issues.")
+
+    insights_file = os.path.join(
+        INSIGHTS_DIR,
+        f"{meta_mask_area.lower()}_insights_{week_start_str}_to_{week_end_str}.txt",
+    )
 
     with open(insights_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
