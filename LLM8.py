@@ -1467,36 +1467,17 @@ def _compute_top_issues(df: pd.DataFrame, area: str) -> tuple[List[tuple[str, in
 
     for col in source_cols:
         col_series = df[col]
-        # If column appears to have categorical values (strings beyond empty), count by value
-        # Otherwise treat presence in the column as the issue named by the column itself
         nonempty_mask = _series_nonempty_mask(col_series)
         if nonempty_mask.sum() == 0:
             continue
-        # Heuristic: if there are multiple distinct non-empty values and the column name ends with 'issue' or contains ':'
-        distinct_vals = (
-            col_series[nonempty_mask].astype(str).str.strip().replace({"nan": ""}).value_counts()
-        )
-        if len(distinct_vals.index) > 1 or any(x in col.lower() for x in ["issue", ":"]):
-            # Count by values
-            for val, cnt in distinct_vals.items():
-                if not val:
-                    continue
-                label = val
-                label_to_count[label] = label_to_count.get(label, 0) + int(cnt)
-                mask = col_series.astype(str).str.strip().eq(val)
-                if label in label_to_mask:
-                    label_to_mask[label] = label_to_mask[label] | mask
-                else:
-                    label_to_mask[label] = mask
+        # Treat each source column as a top-level issue label
+        label = col
+        cnt = int(nonempty_mask.sum())
+        label_to_count[label] = label_to_count.get(label, 0) + cnt
+        if label in label_to_mask:
+            label_to_mask[label] = label_to_mask[label] | nonempty_mask
         else:
-            # Treat the column name as the issue label
-            label = col
-            cnt = int(nonempty_mask.sum())
-            label_to_count[label] = label_to_count.get(label, 0) + cnt
-            if label in label_to_mask:
-                label_to_mask[label] = label_to_mask[label] | nonempty_mask
-            else:
-                label_to_mask[label] = nonempty_mask
+            label_to_mask[label] = nonempty_mask
 
     # Remove known non-issue labels if they slipped in
     for bad in list(label_to_count.keys()):
@@ -1518,6 +1499,11 @@ def analyze_xlsx_and_generate_insights(
 
     # Compute top issues via category sources first
     top_issue_list, issue_masks = _compute_top_issues(df, meta_mask_area)
+
+    # If categories are too sparse (e.g., only 0-1 categories present), prefer theme-based synthesis
+    if len(top_issue_list) < 2:
+        top_issue_list = []
+        issue_masks = {}
 
     issue_col = None  # legacy path disabled when dynamic issues are present
     if not top_issue_list:
@@ -1590,6 +1576,10 @@ def analyze_xlsx_and_generate_insights(
         esc_pct = (escalation_count / total_area_rows * 100.0) if total_area_rows else 0.0
         # Replace with simplified phrasing without percentage
         lines.append(f"Conversations Elevated to Technical Support: {escalation_count:,}")
+    # Audience breakdown (does not influence Top Issues)
+    end_user_ct, developer_ct, unknown_ct = _compute_audience_counts(df)
+    if end_user_ct or developer_ct:
+        lines.append(f"Audience: End-User {end_user_ct:,}, Developer {developer_ct:,}")
     lines.append(f"Focus: Top 3 {meta_mask_area} Issues by Volume")
     lines.append("")
     lines.append(f"📊 Top 3 {meta_mask_area} Issues")
@@ -1674,7 +1664,7 @@ def analyze_xlsx_and_generate_insights(
                         pct = dcnt / total_issue_conversations * 100.0
                         lines.append(f"- {dom}: {dcnt:,} ({pct:.1f}%)")
         # Generic taxonomy diagnostics for other areas (Swaps, Ramps, Dashboard, Wallet)
-        if meta_mask_area in ("Swaps", "Ramps", "Dashboard"):
+        if meta_mask_area in ("Swaps", "Ramps", "Dashboard", "Staking", "Card", "Snaps"):
             total_issue_conversations = max(1, len(issue_texts))
             area_tax = _get_area_taxonomy(meta_mask_area)
             if area_tax:
@@ -1817,6 +1807,27 @@ def authenticate_google_drive_via_service_account():
     except Exception as ex:
         print(f"Google Drive auth failed: {ex}")
         return None
+
+
+def _compute_audience_counts(df: pd.DataFrame) -> tuple[int, int, int]:
+    end_user = 0
+    developer = 0
+    unknown = 0
+    # Prefer 'User type' column if present
+    if 'User type' in df.columns:
+        vals = df['User type'].astype(str).str.strip().str.lower().fillna('')
+        end_user = int((vals == 'end-user').sum())
+        developer = int((vals == 'developer').sum())
+        unknown = int((vals != 'end-user') & (vals != 'developer')).sum()
+    elif 'Developer?' in df.columns:
+        vals = df['Developer?'].astype(str).str.strip().str.lower().fillna('')
+        # Accept true/false variants
+        developer = int(vals.isin(['true', '1', 'yes']).sum())
+        end_user = max(0, len(vals) - developer)
+        unknown = 0
+    else:
+        unknown = len(df)
+    return end_user, developer, unknown
 
 
 def main_function(start_date: str, end_date: str, week_start_str: str, week_end_str: str):
