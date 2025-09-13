@@ -778,7 +778,7 @@ KNOWN_ISSUE_COLUMN_HINTS: Dict[str, List[str]] = {
     ],
 }
 
-# Columns that are not issues and must be excluded from primary issue detection
+# Columns that are NOT issues and must be excluded from Top Issues
 NON_ISSUE_COLUMN_NAMES: Set[str] = set([
     "User type",
     "Developer?",
