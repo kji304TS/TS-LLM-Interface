@@ -5,7 +5,7 @@ import time
 import pytz
 import requests
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from collections import Counter
 from typing import Optional, List, Set, Dict, Tuple
@@ -1046,7 +1046,7 @@ def _iso_from_ts(ts: Optional[int]) -> str:
     if ts is None:
         return ""
     try:
-        return datetime.utcfromtimestamp(int(ts)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return datetime.fromtimestamp(int(ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     except Exception:
         return ""
 
@@ -1712,8 +1712,8 @@ def analyze_xlsx_and_generate_insights(
             dom_pct = (dom_cnt / max(1, total_area_rows)) * 100.0
             lines.append(f"✅ {dom_issue} appears most frequently ({dom_pct:.1f}% of analyzed conversations).")
     else:
-        if top_counts is not None and not top_counts.empty:
-            top_issue, top_cnt = next(iter(top_counts.items()))
+        if top_counts is not None:
+            top_issue, top_cnt = next(iter(top_counts))
             top_pct = (top_cnt / total_area_rows * 100.0) if total_area_rows else 0.0
             lines.append(f"✅ {top_issue} drives a significant share ({top_pct:.1f}%) of weekly volume.")
 
@@ -1786,7 +1786,7 @@ def _compute_audience_counts(df: pd.DataFrame) -> tuple[int, int, int]:
         vals = df['User type'].astype(str).str.strip().str.lower().fillna('')
         end_user = int((vals == 'end-user').sum())
         developer = int((vals == 'developer').sum())
-        unknown = int((vals != 'end-user') & (vals != 'developer')).sum()
+        unknown = int(((vals != 'end-user') & (vals != 'developer')).sum())
     elif 'Developer?' in df.columns:
         vals = df['Developer?'].astype(str).str.strip().str.lower().fillna('')
         # Accept true/false variants
