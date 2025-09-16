@@ -248,6 +248,29 @@ def _top_suspicious_domains(texts: list[str], top_n: int = 5) -> list[tuple[str,
     return ranked[:top_n]
 
 # ---------------------------
+# Generic helpers for KPI extraction
+# ---------------------------
+
+def _find_columns_containing(df: pd.DataFrame, substrings: list[str]) -> list[str]:
+    """Return column names that contain ALL substrings (case-insensitive)."""
+    out = []
+    lowered = {c: c.lower() for c in df.columns}
+    for col, col_lower in lowered.items():
+        if all(s.lower() in col_lower for s in substrings):
+            out.append(col)
+    return out
+
+def _truthy_count(series: pd.Series) -> int:
+    vals = series.astype(str).str.strip().str.lower().fillna("")
+    truthy = {"true", "1", "yes", "y", "accepted", "referred"}
+    return int(vals.isin(truthy).sum())
+
+def _value_count(series: pd.Series, targets: list[str]) -> int:
+    vals = series.astype(str).str.strip().str.lower().fillna("")
+    tset = {t.lower() for t in targets}
+    return int(vals.isin(tset).sum())
+
+# ---------------------------
 # Security taxonomy (user-provided terms)
 # ---------------------------
 
@@ -1554,6 +1577,103 @@ def analyze_xlsx_and_generate_insights(
     end_user_ct, developer_ct, unknown_ct = _compute_audience_counts(df)
     if end_user_ct or developer_ct:
         lines.append(f"Audience: End-User {end_user_ct:,}, Developer {developer_ct:,}")
+
+    # Security-only KPI snapshot (best-effort; reads from dynamic attributes if present)
+    if meta_mask_area == "Security":
+        lines.append("")
+        lines.append("📈 KPI Snapshot (Security)")
+        # FLI Security Tickets ≈ total filtered rows (or specific column if present)
+        fli_cols = _find_columns_containing(df, ["fli", "security", "tickets"]) or _find_columns_containing(df, ["fli", "tickets"]) or []
+        fli_total = int(df[fli_cols[0]].astype(int).sum()) if fli_cols else total_area_rows
+
+        # Elevation breakdown: Not Elevated / Manual / AI
+        # Attempt to infer from columns like 'Elevation', 'AI Elevated', 'Manual Elevated', 'Not Elevated'
+        elev_cols = _find_columns_containing(df, ["elev"])  # any elevation-related column
+        not_elev = 0
+        manual_elev = 0
+        ai_elev = 0
+        if elev_cols:
+            # Prefer categorical column with values like 'manual', 'ai', 'not elevated'
+            cat_col = None
+            for c in elev_cols:
+                if df[c].astype(str).str.contains("manual|ai|not", case=False, na=False).any():
+                    cat_col = c
+                    break
+            if cat_col is not None:
+                vals = df[cat_col].astype(str).str.strip().str.lower().fillna("")
+                manual_elev = int((vals.str.contains("manual")).sum())
+                ai_elev = int((vals.str.contains("ai") & ~vals.str.contains("not")).sum())
+                not_elev = max(0, total_area_rows - manual_elev - ai_elev)
+            else:
+                # Look for binary indicators
+                manual_cols = [c for c in elev_cols if "manual" in c.lower()]
+                ai_cols = [c for c in elev_cols if "ai" in c.lower()]
+                not_cols = [c for c in elev_cols if "not" in c.lower()]
+                manual_elev = sum(_truthy_count(df[c]) for c in manual_cols) if manual_cols else 0
+                ai_elev = sum(_truthy_count(df[c]) for c in ai_cols) if ai_cols else 0
+                not_elev = sum(_truthy_count(df[c]) for c in not_cols) if not_cols else max(0, total_area_rows - manual_elev - ai_elev)
+
+        def _pct(n: int, d: int) -> float:
+            return (n / d * 100.0) if d else 0.0
+
+        lines.append(f":admission_tickets: FLI Security Tickets: {fli_total:,}")
+        lines.append(f"Elevation Rate (Not Elevated / Manual / AI):")
+        lines.append(f"{_pct(not_elev, total_area_rows):.0f}% / {_pct(manual_elev, total_area_rows):.0f}% / {_pct(ai_elev, total_area_rows):.0f}%")
+
+        # Investigative Partner Referrals: look for columns hinting referred/accepted
+        inv_ref_cols = _find_columns_containing(df, ["investigative", "partner"]) or _find_columns_containing(df, ["partner", "referral"]) or []
+        inv_referred = 0
+        inv_accepted = 0
+        for c in inv_ref_cols:
+            vals = df[c].astype(str).str.lower()
+            inv_referred += int(vals.str.contains("referred").sum())
+            inv_accepted += int(vals.str.contains("accepted").sum())
+        lines.append("Investigative Partner Referrals (Referred / Accepted):")
+        lines.append(f"{inv_referred} / {inv_accepted}")
+
+        # MetaMask Trace Referrals
+        trace_cols = _find_columns_containing(df, ["trace"]) or []
+        trace_referred = 0
+        trace_accepted = 0
+        for c in trace_cols:
+            vals = df[c].astype(str).str.lower()
+            trace_referred += int(vals.str.contains("referred").sum())
+            trace_accepted += int(vals.str.contains("accepted").sum())
+        lines.append("MetaMask Trace Referrals (Referred / Accepted):")
+        lines.append(f"{trace_referred} / {trace_accepted}")
+
+        # Blockaid False Positives
+        blockaid_cols = _find_columns_containing(df, ["blockaid"]) or []
+        blockaid_fp = 0
+        for c in blockaid_cols:
+            vals = df[c].astype(str).str.lower()
+            blockaid_fp += int(vals.str.contains("false positive").sum())
+        if blockaid_fp:
+            lines.append(f"Blockaid False Positives: {blockaid_fp}")
+
+        # Overall CSAT
+        csat_cols = _find_columns_containing(df, ["csat"]) or _find_columns_containing(df, ["satisfaction"]) or []
+        csat_pct = None
+        for c in csat_cols:
+            try:
+                # try numeric percentage
+                nums = pd.to_numeric(df[c], errors="coerce")
+                if nums.notna().any():
+                    csat_pct = float(nums.mean())
+                    break
+            except Exception:
+                pass
+        if csat_pct is not None:
+            lines.append(f"Overall CSAT: {csat_pct:.0f}%")
+
+        # SLA Breach Rate
+        sla_cols = _find_columns_containing(df, ["sla"]) or []
+        sla_breach = 0
+        for c in sla_cols:
+            vals = df[c].astype(str).str.lower()
+            sla_breach += int(vals.str.contains("breach|breached").sum())
+        if sla_breach:
+            lines.append(f"SLA Breach Rate: {_pct(sla_breach, total_area_rows):.0f}%")
     lines.append(f"Focus: Top 3 {meta_mask_area} Issues by Volume")
     lines.append("")
     lines.append(f"📊 Top 3 {meta_mask_area} Issues")
