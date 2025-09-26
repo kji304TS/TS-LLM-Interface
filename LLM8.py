@@ -1859,7 +1859,172 @@ def analyze_xlsx_and_generate_insights(
 
     total_area_rows = len(df)
 
-    # Header
+    # Wallet-specific Slack style report
+    if meta_mask_area == "Wallet":
+        # Ensure combined_text exists
+        if "combined_text" not in df.columns:
+            summary_series = df["summary"].astype(str) if "summary" in df.columns else pd.Series([""] * len(df))
+            transcript_series = df["transcript"].astype(str) if "transcript" in df.columns else pd.Series([""] * len(df))
+            df["combined_text"] = summary_series.fillna("") + " " + transcript_series.fillna("")
+
+        def _ordinal(n: int) -> str:
+            if 10 <= n % 100 <= 20:
+                suffix = "th"
+            else:
+                suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+            return f"{n}{suffix}"
+
+        def _format_slack_date(ws: str, we: str) -> str:
+            s = datetime.strptime(ws, "%Y%m%d")
+            e = datetime.strptime(we, "%Y%m%d")
+            return f"{_ordinal(s.day)} - { _ordinal(e.day)} {e.strftime('%B')}"
+
+        def _proper_issue_label(col: str) -> str:
+            key = (col or "").strip().lower()
+            if key == "transaction issue":
+                return "Transaction Issue"
+            if key == "balance issue":
+                return "Balance Issue"
+            if key == "user training":
+                return "User Training"
+            if key == "wallet issue":
+                return "Wallet Issue"
+            return col.title()
+
+        def _extract_top_bugs(texts: List[str], max_items: int = 3) -> List[tuple[str, int, str]]:
+            pattern = re.compile(r"\bMMBUGS-\d+\b", flags=re.IGNORECASE)
+            code_to_count: Dict[str, int] = {}
+            code_to_sample: Dict[str, str] = {}
+            for txt in texts:
+                if not txt:
+                    continue
+                found = set(re.findall(pattern, txt))
+                if not found:
+                    continue
+                # pick a short sample line that includes the code
+                for code in found:
+                    code_upper = code.upper()
+                    code_to_count[code_upper] = code_to_count.get(code_upper, 0) + 1
+                    if code_upper not in code_to_sample:
+                        # choose first line containing the code
+                        for line in str(txt).splitlines():
+                            if code in line or code_upper in line:
+                                snippet = line.strip()
+                                if snippet:
+                                    code_to_sample[code_upper] = snippet[:300]
+                                    break
+            ranked = sorted(code_to_count.items(), key=lambda kv: (-kv[1], kv[0]))
+            total_bug_convs = sum(count for _, count in ranked) or 1
+            top_list: List[tuple[str, int, str]] = []
+            for code, cnt in ranked[:max_items]:
+                sample = code_to_sample.get(code, "")
+                pct = cnt / total_bug_convs * 100.0
+                # Format count with percentage in sample for convenience
+                top_list.append((code, cnt, sample))
+            return top_list
+
+        def _theme_to_slack_emoji(theme_name: str) -> str:
+            m = {
+                "⛽ Gas & Transaction Failures": ":fuelpump:",
+                "🌍 Non-English Language Usage": ":earth_africa:",
+                "🔐 Recovery Phrase Misunderstanding": ":closed_lock_with_key:",
+                "🪙 Token Import Confusion": ":coin:",
+                "🔀 Network/Chain Selection Issues": ":twisted_rightwards_arrows:",
+            }
+            return m.get(theme_name, ":bulb:")
+
+        # Elevation counts
+        elev_manual_count = int(df.get("elevated_manual", pd.Series([False] * len(df))).apply(_is_truthy).sum()) if "elevated_manual" in df.columns else 0
+        elev_ai_count = int(df.get("elevated_ai", pd.Series([False] * len(df))).apply(_is_truthy).sum()) if "elevated_ai" in df.columns else 0
+        elevated_total = elev_manual_count + elev_ai_count if ("elevated_manual" in df.columns or "elevated_ai" in df.columns) else int(escalation_count)
+
+        # Top categories (issues)
+        if not top_counts and source_cols_present:
+            top_counts, issue_masks = _compute_top_issues(df, meta_mask_area)
+        top3 = top_counts[:3] if top_counts else []
+
+        # Build Slack-style lines
+        slack_lines: List[str] = []
+        slack_lines.append(f"{_format_slack_date(week_start_str, week_end_str)}")
+        slack_lines.append(f":admission_tickets: Total Tickets: {total_area_rows}")
+        slack_lines.append(f":firefilmio: Elevated Tickets: {elevated_total}")
+        slack_lines.append(f":recycle: Top Ticket Categories:")
+        medals = [":first_place_medal:", ":second_place_medal:", ":third_place_medal:"]
+        for idx, (issue, cnt) in enumerate(top3):
+            pct = (cnt / total_area_rows * 100.0) if total_area_rows else 0.0
+            slack_lines.append(f"{medals[idx]} { _proper_issue_label(issue) } - {cnt} ({pct:.1f}%)")
+
+        # Top bugs
+        slack_lines.append(":bug2: Top Bugs:")
+        bug_list = _extract_top_bugs(df["combined_text"].astype(str).tolist(), max_items=3)
+        if bug_list:
+            # denominator for percentages: sum of counts
+            denom = sum(cnt for _, cnt, _ in bug_list) or 1
+            for idx, (code, cnt, sample) in enumerate(bug_list[:3]):
+                pct = (cnt / denom) * 100.0
+                slack_lines.append(f"{medals[idx]} {code} - {cnt} ({pct:.1f}%)")
+                if sample:
+                    slack_lines.append(sample)
+
+        # Insights per top category
+        slack_lines.append(":bulb: Insights: " + (f":repeat: { _proper_issue_label(top3[0][0]) } ({top3[0][1]} conversations)" if top3 else ":bulb:"))
+
+        # Helper to add themed bullets per issue
+        def _add_issue_insights(issue_label: str, mask: pd.Series):
+            texts = df.loc[mask, "combined_text"].astype(str).fillna("").tolist()
+            themes = _score_themes(texts, meta_mask_area, max_themes=5)
+            # Map selected themes to slack bullets
+            seen = set()
+            for tname, _score in themes:
+                if tname in seen:
+                    continue
+                emoji = _theme_to_slack_emoji(tname)
+                # For Transaction issues, also include Password/Security reset if detected
+                if (issue_label.lower() == "transaction issue"):
+                    pass
+                slack_lines.append(f"{emoji} {tname.split(' ', 1)[1] if ' ' in tname else tname}")
+                # Add explanation line from theme
+                _, expl = _theme_details(meta_mask_area, tname)
+                if expl:
+                    slack_lines.append(expl)
+                seen.add(tname)
+
+            # Additional Wallet-specific detector: Password/Security Reset
+            pwd_regex = re.compile(r"password|unlock|reset\s+(password|account)", flags=re.IGNORECASE)
+            if any(pwd_regex.search(t or "") for t in texts):
+                slack_lines.append(":key: Password or Security Reset")
+                slack_lines.append("Requests to unlock wallets or reset access using passwords instead of recovery phrases.")
+
+        # For each of top 3 categories, output insights section header and bullets
+        header_emoji = {
+            "transaction issue": ":repeat:",
+            "balance issue": ":moneybag:",
+            "user training": ":male-teacher:",
+        }
+
+        for i, (issue, cnt) in enumerate(top3):
+            issue_key = (issue or "").strip().lower()
+            icon = header_emoji.get(issue_key, ":bulb:")
+            if i > 0:
+                slack_lines.append(f"{icon} { _proper_issue_label(issue) } ({cnt} conversations)")
+            # Build mask for this issue
+            mask = issue_masks.get(issue)
+            if mask is None:
+                mask = pd.Series([False] * len(df))
+            _add_issue_insights(issue_key, mask)
+
+        insights_file = os.path.join(
+            INSIGHTS_DIR,
+            f"{meta_mask_area.lower()}_insights_{week_start_str}_to_{week_end_str}.txt",
+        )
+
+        with open(insights_file, "w", encoding="utf-8") as f:
+            f.write("\n".join(slack_lines))
+
+        print(f"Insights written: {insights_file}")
+        return insights_file
+
+    # Header (default style)
     human_range = _format_human_date_range(week_start_str, week_end_str)
     lines: List[str] = []
     lines.append(f"📝 MetaMask {meta_mask_area} Support — Focused Issue Report")
