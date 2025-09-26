@@ -1859,8 +1859,8 @@ def analyze_xlsx_and_generate_insights(
 
     total_area_rows = len(df)
 
-    # Wallet-specific Slack style report
-    if meta_mask_area == "Wallet":
+    # Slack-style report for all non-Security areas
+    if meta_mask_area != "Security":
         # Ensure combined_text exists
         if "combined_text" not in df.columns:
             summary_series = df["summary"].astype(str) if "summary" in df.columns else pd.Series([""] * len(df))
@@ -1938,10 +1938,16 @@ def analyze_xlsx_and_generate_insights(
         elev_ai_count = int(df.get("elevated_ai", pd.Series([False] * len(df))).apply(_is_truthy).sum()) if "elevated_ai" in df.columns else 0
         elevated_total = elev_manual_count + elev_ai_count if ("elevated_manual" in df.columns or "elevated_ai" in df.columns) else int(escalation_count)
 
-        # Top categories (issues)
+        # Top categories (issues) or fallback to themes if no structured categories
         if not top_counts and source_cols_present:
             top_counts, issue_masks = _compute_top_issues(df, meta_mask_area)
-        top3 = top_counts[:3] if top_counts else []
+        using_issues = bool(top_counts)
+        if using_issues:
+            top3 = top_counts[:3]
+        else:
+            area_texts_all = df["combined_text"].astype(str).fillna("").tolist()
+            theme_scores_all = _score_themes(area_texts_all, meta_mask_area, max_themes=3)
+            top3 = theme_scores_all[:3]
 
         # Build Slack-style lines
         slack_lines: List[str] = []
@@ -1950,9 +1956,10 @@ def analyze_xlsx_and_generate_insights(
         slack_lines.append(f":firefilmio: Elevated Tickets: {elevated_total}")
         slack_lines.append(f":recycle: Top Ticket Categories:")
         medals = [":first_place_medal:", ":second_place_medal:", ":third_place_medal:"]
-        for idx, (issue, cnt) in enumerate(top3):
+        for idx, (label, cnt) in enumerate(top3):
             pct = (cnt / total_area_rows * 100.0) if total_area_rows else 0.0
-            slack_lines.append(f"{medals[idx]} { _proper_issue_label(issue) } - {cnt} ({pct:.1f}%)")
+            disp = _proper_issue_label(label) if using_issues else label
+            slack_lines.append(f"{medals[idx]} {disp} - {cnt} ({pct:.1f}%)")
 
         # Top bugs
         slack_lines.append(":bug2: Top Bugs:")
@@ -1967,7 +1974,12 @@ def analyze_xlsx_and_generate_insights(
                     slack_lines.append(sample)
 
         # Insights per top category
-        slack_lines.append(":bulb: Insights: " + (f":repeat: { _proper_issue_label(top3[0][0]) } ({top3[0][1]} conversations)" if top3 else ":bulb:"))
+        if top3:
+            first_label = top3[0][0]
+            first_disp = _proper_issue_label(first_label) if using_issues else first_label
+            slack_lines.append(":bulb: Insights: " + f":repeat: {first_disp} ({top3[0][1]} conversations)")
+        else:
+            slack_lines.append(":bulb: Insights:")
 
         # Helper to add themed bullets per issue
         def _add_issue_insights(issue_label: str, mask: pd.Series):
@@ -1991,7 +2003,7 @@ def analyze_xlsx_and_generate_insights(
 
             # Additional Wallet-specific detector: Password/Security Reset
             pwd_regex = re.compile(r"password|unlock|reset\s+(password|account)", flags=re.IGNORECASE)
-            if any(pwd_regex.search(t or "") for t in texts):
+            if meta_mask_area == "Wallet" and any(pwd_regex.search(t or "") for t in texts):
                 slack_lines.append(":key: Password or Security Reset")
                 slack_lines.append("Requests to unlock wallets or reset access using passwords instead of recovery phrases.")
 
@@ -2002,16 +2014,29 @@ def analyze_xlsx_and_generate_insights(
             "user training": ":male-teacher:",
         }
 
-        for i, (issue, cnt) in enumerate(top3):
-            issue_key = (issue or "").strip().lower()
-            icon = header_emoji.get(issue_key, ":bulb:")
-            if i > 0:
-                slack_lines.append(f"{icon} { _proper_issue_label(issue) } ({cnt} conversations)")
-            # Build mask for this issue
-            mask = issue_masks.get(issue)
-            if mask is None:
-                mask = pd.Series([False] * len(df))
-            _add_issue_insights(issue_key, mask)
+        for i, (label, cnt) in enumerate(top3):
+            if using_issues:
+                issue_key = (label or "").strip().lower()
+                icon = header_emoji.get(issue_key, ":bulb:")
+                if i > 0:
+                    slack_lines.append(f"{icon} { _proper_issue_label(label) } ({cnt} conversations)")
+                # Build mask for this issue
+                mask = issue_masks.get(label)
+                if mask is None:
+                    mask = pd.Series([False] * len(df))
+                _add_issue_insights(issue_key, mask)
+            else:
+                # Themes path
+                theme_name = label
+                icon = _theme_to_slack_emoji(theme_name)
+                if i > 0:
+                    slack_lines.append(f"{icon} {theme_name} ({cnt} conversations)")
+                patt = _theme_pattern(meta_mask_area, theme_name)
+                if patt is not None:
+                    mask = df["combined_text"].astype(str).fillna("").apply(lambda s: bool(patt.search(s)))
+                else:
+                    mask = pd.Series([False] * len(df))
+                _add_issue_insights(theme_name, mask)
 
         insights_file = os.path.join(
             INSIGHTS_DIR,
