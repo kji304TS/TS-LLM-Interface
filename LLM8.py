@@ -1859,8 +1859,8 @@ def analyze_xlsx_and_generate_insights(
 
     total_area_rows = len(df)
 
-    # Slack-style report for all non-Security areas
-    if meta_mask_area != "Security":
+    # Slack-style report for all areas (Security includes KPI block)
+    if True:
         # Ensure combined_text exists
         if "combined_text" not in df.columns:
             summary_series = df["summary"].astype(str) if "summary" in df.columns else pd.Series([""] * len(df))
@@ -1954,6 +1954,32 @@ def analyze_xlsx_and_generate_insights(
         slack_lines.append(f"{_format_slack_date(week_start_str, week_end_str)}")
         slack_lines.append(f":admission_tickets: Total Tickets: {total_area_rows}")
         slack_lines.append(f":firefilmio: Elevated Tickets: {elevated_total}")
+
+        # Security-specific KPI block inside Slack format
+        if meta_mask_area == "Security":
+            kpis = _compute_security_kpis(df, int(escalation_count))
+            total_kpi = int(kpis.get("total") or 0)
+            total_denom = max(1, total_kpi)
+            ne = int(kpis.get("elev_not") or 0)
+            em = int(kpis.get("elev_manual") or 0)
+            ea = int(kpis.get("elev_ai") or 0)
+            ne_pct = (ne / total_denom) * 100.0
+            em_pct = (em / total_denom) * 100.0
+            ea_pct = (ea / total_denom) * 100.0
+            slack_lines.append(f":admission_tickets: FLI Security Tickets: {int(kpis.get('fli') or 0)}")
+            slack_lines.append(f"Elevation Rate (Not Elevated / Manual / AI):")
+            slack_lines.append(f"{ne_pct:.0f}% / {em_pct:.0f}% / {ea_pct:.0f}%")
+            slack_lines.append(f"Investigative Partner Referrals (Referred / Accepted):")
+            slack_lines.append(f"{int(kpis.get('partner_ref') or 0)} / {int(kpis.get('partner_acc') or 0)}")
+            slack_lines.append(f"MetaMask Trace Referrals (Referred / Accepted):")
+            slack_lines.append(f"{int(kpis.get('trace_ref') or 0)} / {int(kpis.get('trace_acc') or 0)}")
+            slack_lines.append(f"Blockaid False Positives: {int(kpis.get('blockaid_fp') or 0)}")
+            csat_pct = kpis.get('csat_pct')
+            csat_str = f"{csat_pct:.1f}%" if isinstance(csat_pct, float) else "N/A"
+            slack_lines.append(f"Overall CSAT: {csat_str}")
+            sla = kpis.get('sla_breach_pct')
+            sla_str = f"{sla:.0f}%" if isinstance(sla, float) else "N/A"
+            slack_lines.append(f"SLA Breach Rate: {sla_str}")
         slack_lines.append(f":recycle: Top Ticket Categories:")
         medals = [":first_place_medal:", ":second_place_medal:", ":third_place_medal:"]
         for idx, (label, cnt) in enumerate(top3):
